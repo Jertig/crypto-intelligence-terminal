@@ -8,6 +8,7 @@ export function createDatabase(url: string) {
     connect_timeout: 3,
     idle_timeout: 10,
     prepare: false,
+    connection: { statement_timeout: 3000 },
   });
   return { client, db: drizzle(client, { schema }) };
 }

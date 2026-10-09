@@ -30,3 +30,21 @@ does not delete it. Do not use `down -v` unless explicitly discarding local data
 
 Migration generation is credential-free. Migration execution requires a valid
 database URI. Schema changes must be committed as SQL and Drizzle metadata.
+
+## Full local stack
+
+```sh
+docker compose build
+docker compose up -d --wait
+```
+
+Open `http://127.0.0.1:8080`. Readiness is at `/health?ready=1`. Only Caddy is
+exposed, on loopback. Worker migrations run before its heartbeat service starts;
+web waits for worker readiness. Images run application code as a non-root user.
+Compose caps runtime memory at 1,300 MB in total and rotates each service's logs
+at three 10 MB files. This is a local foundation configuration, not a secured
+production deployment.
+
+For host development, use the database override, run `pnpm db:migrate`,
+`pnpm dev:worker`, and `pnpm dev` in separate terminals. The latter commands read
+the ignored root `.env`; production image builds require no credentials.
