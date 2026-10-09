@@ -109,7 +109,7 @@ jobs:
       - name: Verify application readiness
         run: |
           curl --fail --silent http://127.0.0.1:8080/health?ready=1
-          test -z "$(docker compose port postgres 5432)"
+          test "$(docker inspect "$(docker compose ps -q postgres)" --format '{{len .HostConfig.PortBindings}}')" = '0'
       - if: failure()
         run: docker compose logs --no-color --tail 100
       - if: always()
