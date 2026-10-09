@@ -1,0 +1,43 @@
+{
+  "project": "Crypto Intelligence Terminal",
+  "repository": "crypto-intelligence-terminal",
+  "recommended_model": "GPT-6 Astra",
+  "recommended_mode": "Work",
+  "recommended_thinking": "High",
+  "vps": {
+    "vcpu": 2,
+    "ram_gb": 2,
+    "disk_gb": 40
+  },
+  "approved_design": "design/approved-ivory-terminal-reference.png",
+  "primary_stack": [
+    "Next.js",
+    "TypeScript",
+    "PostgreSQL 16",
+    "Drizzle ORM",
+    "Zod",
+    "TanStack Query",
+    "TanStack Table",
+    "TradingView Lightweight Charts",
+    "Docker Compose",
+    "Caddy",
+    "Vitest",
+    "Playwright"
+  ],
+  "initial_providers": [
+    "Binance",
+    "CoinGecko",
+    "DEX Screener",
+    "Helius",
+    "DefiLlama",
+    "FRED",
+    "GoPlus"
+  ],
+  "quality_classes": [
+    "DIRECT",
+    "AGGREGATED",
+    "DERIVED",
+    "ESTIMATED",
+    "AI_INTERPRETATION"
+  ]
+}

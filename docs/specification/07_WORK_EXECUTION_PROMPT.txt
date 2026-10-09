@@ -1,0 +1,36 @@
+Open this folder and treat it as the authoritative project brief.
+
+Read START_HERE.md first, then read every numbered specification file in order.
+
+Inspect design/approved-ivory-terminal-reference.png.
+
+Then:
+
+1. Summarize the architecture and Phase 0 deliverables back to me briefly.
+2. Check whether a Git repository already exists.
+3. If not, initialize the repository locally.
+4. If GitHub access is connected, create or connect to a repository named:
+   crypto-intelligence-terminal
+5. Do not write the entire project at once.
+6. Execute Phase 0 only.
+7. Use feature branches and meaningful conventional commits.
+8. Set up CI before starting Phase 1.
+9. Run the full QA instructions in 05_TESTING_QA_PROMPT.md.
+10. Fix failures.
+11. Push the Phase 0 branch if remote access is available.
+12. Show me:
+    - repository structure
+    - commits created
+    - test results
+    - build result
+    - screenshots of the initial shell
+    - known limitations
+13. Stop and wait for my approval before Phase 1.
+
+Never commit secrets.
+
+Never weaken tests merely to make CI green.
+
+Never fabricate live data.
+
+The approved design reference is a visual direction, not permission to fake metrics before the data layer exists.
