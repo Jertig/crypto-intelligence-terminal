@@ -1,18 +1,21 @@
 # Data sources
 
-No external provider is connected in Phase 0. No provider keys are required to
-view the shell. There are no market fixtures in the production application.
+Binance public spot REST and streams are connected in Phase 1 without keys.
+Futures is independently unavailable when the public host times out. No fixtures
+or fabricated values are used in the production application.
 
-| Planned provider | Purpose                                                   | Phase 0 status |
-| ---------------- | --------------------------------------------------------- | -------------- |
-| Binance          | Spot, derivatives, candles, selected streams              | Not connected  |
-| CoinGecko        | Identity, metadata, categories, fallback aggregate values | Not connected  |
-| DEX Screener     | Pair discovery, liquidity, volume                         | Not connected  |
-| Helius           | Explicitly tracked Solana entities                        | Not connected  |
-| DefiLlama        | Selected protocol, chain, stablecoin metrics              | Not connected  |
-| FRED             | Macro observations with release/revision semantics        | Not connected  |
-| GoPlus           | Optional third-party risk signals                         | Not connected  |
+| Provider     | Purpose                                      | Current capability                                         |
+| ------------ | -------------------------------------------- | ---------------------------------------------------------- |
+| Binance      | Spot, derivatives, candles, selected streams | Spot observed; futures adapter tested, locally unavailable |
+| CoinGecko    | Global identity, metadata, categories        | Not connected                                              |
+| DEX Screener | Pair discovery, liquidity, volume            | Phase 3                                                    |
+| Helius       | Explicitly tracked Solana wallets            | Phase 4                                                    |
+| DefiLlama    | Selected protocol/chain metrics              | Not connected                                              |
+| FRED         | Macro observations and revisions             | Phase 5                                                    |
+| GoPlus       | Optional risk evidence                       | Phase 3                                                    |
 
-Future adapters must normalize responses before core logic and test malformed,
-empty, rate-limited, timed-out, stale, and disconnected responses. Unit tests must
-not call live APIs. Requests and retries must remain bounded.
+Adapters validate before core logic. Tests cover malformed, empty, rate-limited,
+timed-out, stale and disconnected responses without live API dependencies.
+Provider source timestamps survive persistence and query DTOs. Spot and
+funding/OI have independent freshness windows. Missing data stays unavailable.
+Cached data ages during query failure. Production keys remain server-side only.

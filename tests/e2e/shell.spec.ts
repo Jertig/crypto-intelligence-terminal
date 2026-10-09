@@ -30,7 +30,7 @@ test('ivory shell renders honest empty states without browser errors', async ({
   expect(errors).toEqual([]);
 });
 
-test('workspace navigation preserves the shell and discloses planned functionality', async ({
+test('workspace navigation opens the market core and discloses later planned functionality', async ({
   page,
 }) => {
   await page.goto('/');
@@ -42,6 +42,14 @@ test('workspace navigation preserves the shell and discloses planned functionali
   await expect(
     page.getByRole('heading', { name: 'Markets', exact: true }).first(),
   ).toBeVisible();
+  await expect(
+    page.getByText('Market feeds are not connected', { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Wallets', exact: true })
+    .click();
+  await expect(page).toHaveURL('/wallets');
   await expect(
     page.getByText('This workspace is not available yet', { exact: true }),
   ).toBeVisible();
