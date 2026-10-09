@@ -24,4 +24,5 @@ playwright-report/
 test-results/
 .pnpm-store/
 .work/
+**/next-env.d.ts
 !packages/db/migrations/

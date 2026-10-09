@@ -35,3 +35,9 @@ truthfully. GitHub CI must verify migration constraints and browser behavior.
 
 Never commit secrets, `.env`, dumps, runtime data, or generated build artifacts.
 Keep `.env.example` values blank. Preserve the supplied specification verbatim.
+
+## Completion
+
+All seven bounded steps have been implemented and locally verified. The complete
+checklist and remaining scope limits are recorded in `docs/qa-report.md`.
+Phase 1 and VPS deployment remain gated on explicit user approval.

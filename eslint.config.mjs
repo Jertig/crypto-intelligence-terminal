@@ -13,6 +13,7 @@ export default defineConfig([
     '**/migrations/meta/**',
     '**/playwright-report/**',
     '**/test-results/**',
+    '**/.work/**',
   ]),
   ...tseslint.configs.recommended,
   {

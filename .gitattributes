@@ -1,3 +1,4 @@
 * text=auto eol=lf
 *.png binary
 docs/specification/* whitespace=-blank-at-eol
+patches/*.patch whitespace=-blank-at-eol
