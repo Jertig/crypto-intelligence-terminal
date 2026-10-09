@@ -7,3 +7,6 @@ docs/specification
 packages/db/migrations/meta
 playwright-report
 test-results
+.work
+patches
+**/next-env.d.ts

@@ -1,0 +1,116 @@
+name: Phase 0 QA
+
+on:
+  push:
+    branches: [main, 'chore/project-bootstrap*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Lint and format
+            command: pnpm format:check && pnpm lint
+          - name: Typecheck
+            command: pnpm typecheck
+          - name: Unit tests
+            command: pnpm test:unit
+          - name: Production build
+            command: pnpm build
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: ${{ matrix.command }}
+
+  database:
+    name: PostgreSQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start isolated PostgreSQL
+        shell: bash
+        run: |
+          password=$(openssl rand -hex 32)
+          echo "::add-mask::$password"
+          printf 'POSTGRES_PASSWORD=%s\n' "$password" > .env
+          printf 'TEST_DATABASE_URL=postgresql://terminal:%s@127.0.0.1:54321/terminal_test\n' "$password" >> .env
+          docker compose -f compose.yaml -f infra/docker/compose.local.yaml up -d postgres --wait
+          docker compose exec -T postgres psql -U terminal -d terminal -c 'CREATE DATABASE terminal_test'
+      - run: pnpm test:integration
+      - run: pnpm db:check
+      - if: always()
+        run: docker compose down
+
+  browser:
+    name: Browser smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: browser-failure-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  containers:
+    name: Docker readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Set ephemeral database password
+        shell: bash
+        run: |
+          password=$(openssl rand -hex 32)
+          echo "::add-mask::$password"
+          printf 'POSTGRES_PASSWORD=%s\n' "$password" > .env
+      - run: docker compose config --quiet
+      - run: docker compose build worker && docker compose build web
+      - run: docker compose up -d --wait --wait-timeout 120
+      - name: Verify application readiness
+        run: |
+          curl --fail --silent http://127.0.0.1:8080/health?ready=1
+          test -z "$(docker compose port postgres 5432)"
+      - if: failure()
+        run: docker compose logs --no-color --tail 100
+      - if: always()
+        run: docker compose down

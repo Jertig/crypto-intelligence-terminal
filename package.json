@@ -2,6 +2,7 @@
   "name": "crypto-intelligence-terminal",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=24 <25",
@@ -19,19 +20,24 @@
     "typecheck": "pnpm --workspace-concurrency=1 -r typecheck && tsc -p tsconfig.tests.json --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
+    "test:integration": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --project integration",
+    "test:e2e": "playwright test",
     "build": "pnpm --filter @terminal/worker build && pnpm --filter @terminal/web build",
     "qa": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "9.39.5",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "eslint": "^9.39.1",
+    "eslint": "9.39.5",
     "eslint-config-next": "16.4.0",
     "prettier": "3.9.9",
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.1",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "braces": "3.0.3",
+    "@playwright/test": "1.64.0",
+    "tsx": "4.23.15"
   }
 }
