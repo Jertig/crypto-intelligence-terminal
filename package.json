@@ -10,6 +10,9 @@
   "scripts": {
     "dev": "pnpm --filter @terminal/web dev",
     "dev:worker": "pnpm --filter @terminal/worker dev",
+    "db:generate": "pnpm --filter @terminal/db generate",
+    "db:check": "pnpm --filter @terminal/db check",
+    "db:migrate": "pnpm --filter @terminal/db migrate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",

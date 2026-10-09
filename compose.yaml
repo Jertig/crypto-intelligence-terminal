@@ -1,0 +1,31 @@
+name: crypto-intelligence-terminal
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: terminal
+      POSTGRES_USER: terminal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your ignored .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U terminal -d terminal']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+    mem_limit: 500m
+    cpus: 0.75
+    command: [postgres, -c, shared_buffers=128MB, -c, max_connections=30]
+    logging: *logging
+
+volumes:
+  postgres-data:

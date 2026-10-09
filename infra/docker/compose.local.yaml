@@ -1,0 +1,6 @@
+# Explicit opt-in for host-side migration and integration tests.
+# The application Compose file exposes no database port.
+services:
+  postgres:
+    ports:
+      - 127.0.0.1:${POSTGRES_LOCAL_PORT:-54321}:5432

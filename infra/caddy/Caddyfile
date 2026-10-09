@@ -1,0 +1,10 @@
+# Local validation only. HTTPS and production access control belong to Phase 8.
+{
+  auto_https off
+  admin off
+}
+
+:80 {
+  encode gzip
+  reverse_proxy web:3000
+}
