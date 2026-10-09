@@ -1,0 +1,2 @@
+ALTER TABLE "funding_rates" ADD CONSTRAINT "funding_provenance_valid" CHECK (length("funding_rates"."source") > 0 AND length("funding_rates"."provider_id") > 0 AND ("funding_rates"."quality" NOT IN ('DERIVED', 'ESTIMATED') OR "funding_rates"."methodology_version" IS NOT NULL));--> statement-breakpoint
+ALTER TABLE "open_interest" ADD CONSTRAINT "oi_provenance_valid" CHECK (length("open_interest"."source") > 0 AND length("open_interest"."provider_id") > 0 AND ("open_interest"."quality" NOT IN ('DERIVED', 'ESTIMATED') OR "open_interest"."methodology_version" IS NOT NULL));

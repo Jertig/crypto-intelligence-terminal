@@ -29,6 +29,33 @@ const environmentSchema = z.object({
     blankToUndefined,
     z.coerce.number().int().min(1000).max(10000).default(5000),
   ),
+  MARKET_INGESTION_ENABLED: z.preprocess(
+    blankToUndefined,
+    z.enum(['true', 'false']).optional(),
+  ),
+  MARKET_SYMBOLS: z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .regex(/^[A-Z0-9]{2,24}(,[A-Z0-9]{2,24}){0,29}$/)
+      .refine(
+        (value) => new Set(value.split(',')).size === value.split(',').length,
+        'Duplicate symbols',
+      )
+      .optional(),
+  ),
+  BINANCE_REST_BASE_URL: z.preprocess(
+    blankToUndefined,
+    z.string().url().optional(),
+  ),
+  BINANCE_FUTURES_BASE_URL: z.preprocess(
+    blankToUndefined,
+    z.string().url().optional(),
+  ),
+  BINANCE_WS_BASE_URL: z.preprocess(
+    blankToUndefined,
+    z.string().url().optional(),
+  ),
 });
 
 export class EnvironmentError extends Error {
