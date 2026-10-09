@@ -45,6 +45,11 @@ services:
       DATABASE_URL: postgresql://terminal:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/terminal
       WORKER_PORT: 3001
       HEARTBEAT_INTERVAL_MS: 5000
+      MARKET_INGESTION_ENABLED: ${MARKET_INGESTION_ENABLED:-true}
+      MARKET_SYMBOLS: ${MARKET_SYMBOLS:-}
+      BINANCE_REST_BASE_URL: ${BINANCE_REST_BASE_URL:-}
+      BINANCE_FUTURES_BASE_URL: ${BINANCE_FUTURES_BASE_URL:-}
+      BINANCE_WS_BASE_URL: ${BINANCE_WS_BASE_URL:-}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,13 +1,34 @@
-# Phase 0 plan
+# Active implementation plan
 
 The attached work package is the authoritative specification. The user's explicit
 scope and model request take precedence over its recommendations.
 
-## Scope
+## Approved sequence
 
-Create the engineering foundation and initial ivory terminal shell. Stop before
-Phase 1. Do not ingest market data, implement providers, generate market values,
-call an LLM, deploy, or touch the VPS.
+Phase 0 is approved and merged. Complete Phases 1–8 sequentially, running each
+phase's full QA gate and merging only green CI. Do not purchase services, handle
+private keys, automate trading, fabricate market facts, or deploy to the VPS
+without deployment authorization. Missing optional credentials do not block
+independent work; document them and preserve explicit unavailable states.
+
+## Phase 1 bounded plan
+
+1. Preserve the four-service topology and ivory shell. Add shared normalized
+   market contracts and a public-data-only Binance adapter with bounded requests,
+   timeout/rate-limit handling, reconnect/resubscription, and staleness.
+2. Add typed asset/venue/market identity, snapshots, OHLCV, funding, OI, and
+   ingestion-run tables with provenance, uniqueness, idempotent persistence,
+   retention, and transaction tests.
+3. Integrate one worker: capped universe (default 12, maximum 30 markets), one
+   spot WebSocket, bounded REST bootstrap/recovery, no tick history, periodic
+   batched persistence, and independent derivative availability.
+4. Serve bounded database queries only. Add table sorting/filtering/column
+   visibility, keyboard selection, asset inspector, source/freshness indicators,
+   and a basic price chart. No narrative, wallet, risk-score, or AI implementation
+   in this phase.
+5. Verify live public spot ingestion, failure/reconnect behavior, deterministic
+   provider fixtures, real PostgreSQL and browser paths, clean build, Docker,
+   security, resources, and approved design; document, push, PR, merge green CI.
 
 ## Bounded changes
 
@@ -36,8 +57,7 @@ truthfully. GitHub CI must verify migration constraints and browser behavior.
 Never commit secrets, `.env`, dumps, runtime data, or generated build artifacts.
 Keep `.env.example` values blank. Preserve the supplied specification verbatim.
 
-## Completion
+## Completed foundation
 
-All seven bounded steps have been implemented and locally verified. The complete
-checklist and remaining scope limits are recorded in `docs/qa-report.md`.
-Phase 1 and VPS deployment remain gated on explicit user approval.
+All Phase 0 steps were verified and approved. The original report remains
+`docs/qa-report.md`; subsequent phase reports are preserved separately.
