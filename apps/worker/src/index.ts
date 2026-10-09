@@ -4,6 +4,7 @@ import { createDatabase } from '@terminal/db';
 import { removeHeartbeat, saveHeartbeat } from '@terminal/db/heartbeat';
 import { readEnvironment } from '@terminal/domain/environment';
 import { isHeartbeatFresh } from '@terminal/domain/health';
+import { MarketEngine } from './market-engine';
 
 async function start() {
   const config = readEnvironment(process.env, true);
@@ -15,6 +16,10 @@ async function start() {
   let stopping = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: Promise<void> | undefined;
+  const marketEngine =
+    config.MARKET_INGESTION_ENABLED === 'false'
+      ? undefined
+      : new MarketEngine(connection, config);
 
   async function beat() {
     try {
@@ -49,8 +54,8 @@ async function start() {
     response.end(
       JSON.stringify({
         status: ready ? 'ok' : 'unavailable',
-        mode: 'idle',
-        ingestion: 'NOT_IMPLEMENTED',
+        mode: marketEngine ? 'market-core' : 'idle',
+        ingestion: marketEngine ? 'RUNNING' : 'DISABLED',
       }),
     );
   });
@@ -66,6 +71,7 @@ async function start() {
     }, config.HEARTBEAT_INTERVAL_MS);
   }
   schedule();
+  marketEngine?.start();
 
   async function shutdown(exitCode: number) {
     if (stopping) return;
@@ -73,6 +79,7 @@ async function start() {
     clearTimeout(timer);
     const deadline = setTimeout(() => process.exit(1), 8000);
     deadline.unref();
+    await marketEngine?.stop();
     await pending;
     await new Promise<void>((resolve) => server.close(() => resolve()));
     try {
@@ -95,7 +102,9 @@ async function start() {
     void shutdown(0);
   });
   console.info(
-    'Worker ready in idle mode. No market ingestion jobs are configured.',
+    marketEngine
+      ? 'Worker ready. Bounded public market ingestion enabled.'
+      : 'Worker ready. Market ingestion explicitly disabled.',
   );
 }
 

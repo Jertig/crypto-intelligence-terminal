@@ -3,18 +3,19 @@
 An evidence-first crypto research workstation for market structure, narratives,
 wallets, events, macro, and risk.
 
-![Phase 0 ivory terminal shell](design/phase0-ivory-shell.png)
+![Ivory market core with timestamped local observations](design/phase1-market-core.png)
 
-Phase 0 provides the terminal shell and engineering foundation. Navigation,
-keyboard command search, runtime health, and explicit empty states work. Market
-providers, asset selection, charts, scores, and AI analysis await later phases.
+The market core provides a bounded Binance spot stream, persisted closed candles,
+a sortable scanner, asset inspection, provenance, price charts, and independent
+funding/open-interest adapters. Provider failures and stale observations remain
+visible. Research intelligence is being implemented in subsequent phases.
 The approved reference is a design direction; its illustrative values are never
 used as market data.
 
 ## Architecture
 
 Caddy fronts a Next.js application. One TypeScript worker runs bounded operational
-heartbeats against PostgreSQL 16. Drizzle owns migrations; shared Zod contracts
+heartbeats and ingestion against PostgreSQL 16. Drizzle owns migrations; shared Zod contracts
 validate configuration, provenance, and provider health. PostgreSQL remains
 internal in the full Compose stack. No Redis or additional runtime service is
 required.
@@ -68,7 +69,8 @@ They reset only that guarded test database. Browser tests launch the production
 server and exercise navigation, keyboard controls, empty/error states, and layouts.
 
 GitHub Actions runs these checks plus a fresh Docker build and readiness test.
-The [Phase 0 QA report](docs/qa-report.md) records results and scope exclusions.
+The [Phase 0 QA report](docs/qa-report.md) and [Phase 1 review](docs/qa/phase-1.md)
+record results and scope limitations.
 Production dependency audit is clean. One upstream development-tool advisory is
 locally mitigated and documented in [dependency security](docs/dependency-security.md).
 
@@ -80,6 +82,10 @@ methodology version. Missing evidence stays absent rather than becoming zero.
 See [architecture](docs/architecture.md), [sources](docs/data-sources.md),
 [provenance](docs/data-provenance.md), and [reliability](docs/reliability.md).
 
-The authoritative brief is preserved in `docs/specification`. Phase 1 will add
-the market core only after approval. No VPS deployment has been performed.
+The authoritative brief is preserved in `docs/specification`. Phase 0 is approved
+and merged; Phases 1–8 are authorized sequentially after each green QA/CI gate.
+No VPS deployment has been performed. The default universe is 12 Binance USDT
+spot markets (maximum 30); derivatives are independently unavailable when the
+public futures endpoint cannot be reached. Tests use explicit fixtures, never
+production seeds. See [market core](docs/market-core.md).
 `PLAN.md`, `STATUS.md`, and `BLOCKERS.md` record the current phase and limitations.

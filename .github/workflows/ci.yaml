@@ -1,8 +1,8 @@
-name: Phase 0 QA
+name: Terminal QA
 
 on:
   push:
-    branches: [main, 'chore/project-bootstrap*']
+    branches: [main, 'chore/**', 'feat/**', 'fix/**']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -58,7 +58,7 @@ jobs:
         run: |
           password=$(openssl rand -hex 32)
           echo "::add-mask::$password"
-          printf 'POSTGRES_PASSWORD=%s\n' "$password" > .env
+          printf 'POSTGRES_PASSWORD=%s\nMARKET_INGESTION_ENABLED=false\n' "$password" > .env
           printf 'TEST_DATABASE_URL=postgresql://terminal:%s@127.0.0.1:54321/terminal_test\n' "$password" >> .env
           docker compose -f compose.yaml -f infra/docker/compose.local.yaml up -d postgres --wait
           docker compose exec -T postgres psql -U terminal -d terminal -c 'CREATE DATABASE terminal_test'
@@ -102,7 +102,7 @@ jobs:
         run: |
           password=$(openssl rand -hex 32)
           echo "::add-mask::$password"
-          printf 'POSTGRES_PASSWORD=%s\n' "$password" > .env
+          printf 'POSTGRES_PASSWORD=%s\nMARKET_INGESTION_ENABLED=false\n' "$password" > .env
       - run: docker compose config --quiet
       - run: docker compose build worker && docker compose build web
       - run: docker compose up -d --wait --wait-timeout 120

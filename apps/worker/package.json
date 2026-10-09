@@ -11,10 +11,11 @@
   },
   "dependencies": {
     "@terminal/db": "workspace:*",
-    "@terminal/domain": "workspace:*"
+    "@terminal/domain": "workspace:*",
+    "@terminal/providers": "workspace:*"
   },
   "devDependencies": {
-    "tsx": "4.23.15",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15"
   }
 }

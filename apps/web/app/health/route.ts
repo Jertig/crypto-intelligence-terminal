@@ -1,24 +1,21 @@
 import { eq } from 'drizzle-orm';
-import {
-  createDatabase,
-  workerHeartbeats,
-  type DatabaseConnection,
-} from '@terminal/db';
-import { readEnvironment } from '@terminal/domain/environment';
+import { workerHeartbeats } from '@terminal/db';
+import { configuredDatabase } from '../../lib/database';
+import { freshness } from '@terminal/domain/market';
 import { systemHealth, type DatabaseState } from '@terminal/domain/health';
+import { providerHealth } from '@terminal/db/schema';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-let connection: DatabaseConnection | undefined;
 
 export async function GET(request: Request) {
   let database: DatabaseState = 'NOT_CONFIGURED';
   let heartbeat: Date | null = null;
+  let providers: { providerId: string; status: string }[] = [];
   try {
-    const config = readEnvironment(process.env);
-    if (config.DATABASE_URL) {
+    const connection = configuredDatabase();
+    if (connection) {
       try {
-        connection ??= createDatabase(config.DATABASE_URL);
         await connection.client`SELECT 1`;
         const [record] = await connection.db
           .select({ lastSeenAt: workerHeartbeats.lastSeenAt })
@@ -27,6 +24,26 @@ export async function GET(request: Request) {
           .limit(1);
         heartbeat = record?.lastSeenAt ?? null;
         database = 'READY';
+        const health = await connection.db
+          .select({
+            providerId: providerHealth.providerId,
+            status: providerHealth.status,
+            lastSuccessAt: providerHealth.lastSuccessAt,
+          })
+          .from(providerHealth)
+          .limit(30);
+        providers = health.map((row) => ({
+          providerId: row.providerId,
+          status:
+            row.lastSuccessAt &&
+            freshness(
+              row.lastSuccessAt,
+              new Date(),
+              row.providerId.includes('perpetual') ? 600000 : 90000,
+            ) === 'STALE'
+              ? 'STALE'
+              : row.status,
+        }));
       } catch {
         database = 'UNAVAILABLE';
       }
@@ -37,7 +54,17 @@ export async function GET(request: Request) {
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }
-  const result = systemHealth(database, heartbeat, new Date());
+  const result = {
+    ...systemHealth(database, heartbeat, new Date()),
+    phase: 1,
+    providers: {
+      configured: new Set(providers.map((row) => row.providerId.split(':')[0]))
+        .size,
+      state: providers.length ? 'OBSERVED' : 'NOT_CONFIGURED',
+      capabilities: providers,
+    },
+    ingestion: providers.length ? 'OBSERVED' : 'WAITING_OR_DISABLED',
+  };
   const readinessRequested =
     new URL(request.url).searchParams.get('ready') === '1';
   return Response.json(result, {

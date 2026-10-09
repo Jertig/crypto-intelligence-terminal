@@ -6,6 +6,7 @@ COPY apps/web/package.json apps/web/package.json
 COPY apps/worker/package.json apps/worker/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/domain/package.json packages/domain/package.json
+COPY packages/providers/package.json packages/providers/package.json
 COPY patches ./patches
 RUN pnpm install --frozen-lockfile
 

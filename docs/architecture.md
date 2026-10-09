@@ -5,19 +5,21 @@ one bounded TypeScript worker, and PostgreSQL 16. PostgreSQL has no public port
 in the application Compose configuration.
 
 ```text
-External sources (future phases)
+External sources (Binance active; other adapters in subsequent phases)
   → provider adapters → worker → normalization → PostgreSQL
   → feature/intelligence engines → query layer → terminal and read-only AI tools
 ```
 
-Phase 0 establishes `apps/web`, `apps/worker`, `packages/domain`, and `packages/db`.
-Provider adapters, indicators, signals, narratives, wallets, events, and AI tools
-are reserved boundaries, not implemented capabilities.
+The repository contains `apps/web`, `apps/worker`, `packages/domain`,
+`packages/db`, and `packages/providers`. Phase 1 adds Binance normalization,
+bounded streaming, snapshots, OHLCV, funding/OI persistence and query APIs.
+Indicators, signals, narratives, wallets, events and AI tools remain subsequent
+phase boundaries. Web requests read PostgreSQL; they never fan out to providers.
 
 The web shell can render with no database or provider configured. A liveness check
 must distinguish a running web process from database readiness. The worker must
 validate configuration, connect to the database, and stop gracefully; no market
-ingestion is authorized in this phase.
+ingestion uses one combined connection and bounded REST schedules.
 
 Decisions: pnpm workspaces, strict TypeScript, PostgreSQL migrations via Drizzle,
 Zod validation, server-side credentials, bounded connection pools, and a single

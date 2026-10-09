@@ -1,6 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  MarketScanner,
+  MarketInspector,
+  PriceHistory,
+  useMarketData,
+  formatNumber,
+} from './market-workspace';
+import type { MarketRow } from '@terminal/domain/market';
+import { useMarketSelection } from './query-provider';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -140,10 +149,25 @@ function CommandPalette({
   close: () => void;
 }) {
   const router = useRouter();
+  const marketQuery = useMarketData();
+  const { setSelected: selectAsset } = useMarketSelection();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const input = useRef<HTMLInputElement>(null);
-  const results = filterDestinations(query);
+  const results = [
+    ...filterDestinations(query),
+    ...(query.trim()
+      ? (marketQuery.data?.rows ?? [])
+          .filter((row) =>
+            row.base.toLowerCase().includes(query.trim().toLowerCase()),
+          )
+          .map((row) => ({
+            id: row.id,
+            label: `${row.base} · Binance spot · ${row.freshness}`,
+            icon: 'chart',
+          }))
+      : []),
+  ];
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
@@ -156,6 +180,11 @@ function CommandPalette({
   }, [dialog]);
   function go(id: string) {
     close();
+    if (id.startsWith('binance:')) {
+      selectAsset(id);
+      router.push('/markets');
+      return;
+    }
     router.push(workspaceHref(id));
   }
   return (
@@ -210,7 +239,13 @@ function CommandPalette({
           >
             <Icon name={item.icon} />
             <span>{item.label}</span>
-            <small>{item.phase ? 'Not available yet' : 'Open'}</small>
+            <small>
+              {'phase' in item &&
+              typeof item.phase === 'number' &&
+              item.phase > 1
+                ? 'Not available yet'
+                : 'Open'}
+            </small>
           </button>
         ))}
         {!results.length && (
@@ -228,7 +263,15 @@ function CommandPalette({
   );
 }
 
-function Dashboard() {
+function Dashboard({
+  selected,
+  onSelect,
+  market,
+}: {
+  selected: string | null;
+  onSelect: (id: string) => void;
+  market: MarketRow | null;
+}) {
   return (
     <>
       <div className="workspace-tabs">
@@ -242,57 +285,12 @@ function Dashboard() {
           <span className="eyebrow">RESEARCH OVERVIEW</span>
           <h1>Dashboard</h1>
         </div>
-        <span className="workspace-note">Awaiting verified observations</span>
+        <span className="workspace-note">
+          Source-stamped research observations
+        </span>
       </div>
       <div className="research-grid">
-        <Panel
-          title="Market scanner"
-          detail="NO CONNECTED FEED"
-          className="scanner"
-        >
-          <div className="scanner-toolbar">
-            <span>
-              Universe <b>—</b>
-            </span>
-            <span>24H · USD</span>
-            <Link href="/data-status">
-              Data status <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  {[
-                    'Asset',
-                    'Price',
-                    '24H %',
-                    '24H volume',
-                    'OI',
-                    'Funding',
-                    'Source',
-                  ].map((column) => (
-                    <th key={column}>{column}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={7}>
-                    <Empty title="Market feeds are not connected">
-                      Prices and derivatives will appear after verified
-                      ingestion is available.
-                    </Empty>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="panel-foot">
-            <span>0 observations</span>
-            <span>No synthetic or substituted values</span>
-          </div>
-        </Panel>
+        <MarketScanner selected={selected} onSelect={onSelect} />
         <Panel title="Sector performance" detail="7D" className="sector">
           <Empty title="No sector observations" icon="layers">
             Sector returns require normalized assets and market history.
@@ -332,19 +330,7 @@ function Dashboard() {
             Scores will expose their inputs and methodology version.
           </Empty>
         </Panel>
-        <Panel
-          title="Relative performance"
-          detail="NO HISTORY"
-          className="comparison"
-        >
-          <Empty title="No historical coverage">
-            Select assets once timestamped price history is connected.
-          </Empty>
-          <div className="panel-foot">
-            <span>Common starting point required</span>
-            <span>—</span>
-          </div>
-        </Panel>
+        <PriceHistory market={market} />
         <Panel
           title="Upcoming & recent events"
           detail="SOURCE REQUIRED"
@@ -373,6 +359,7 @@ function Dashboard() {
 }
 
 function SystemWorkspace({ workspace }: { workspace: string }) {
+  const marketQuery = useMarketData();
   const [state, setState] = useState<{
     kind: 'loading' | 'ready' | 'error';
     database?: string;
@@ -429,7 +416,11 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
           <span className="eyebrow">SYSTEM & EVIDENCE</span>
           <h1>{entry?.label}</h1>
         </div>
-        <span className="workspace-note">No external providers connected</span>
+        <span className="workspace-note">
+          {marketQuery.data?.providers.length
+            ? 'Provider capabilities reported independently'
+            : 'No external providers connected'}
+        </span>
       </div>
       {workspace === 'data-status' && (
         <Panel title="Runtime health" detail="LOCAL FOUNDATION">
@@ -465,7 +456,11 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
                 </div>
                 <div>
                   <span>Market ingestion</span>
-                  <strong>NOT IMPLEMENTED</strong>
+                  <strong>
+                    {marketQuery.data?.rows.length
+                      ? 'OBSERVED'
+                      : 'WAITING / DISABLED'}
+                  </strong>
                 </div>
               </>
             )}
@@ -473,7 +468,7 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
         </Panel>
       )}
       {workspace !== 'settings' ? (
-        <Panel title="API sources" detail="0 CONNECTED">
+        <Panel title="API sources" detail="CAPABILITY HEALTH">
           <div className="table-scroll">
             <table className="provider-table">
               <thead>
@@ -490,9 +485,32 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
                     <td>{provider.name}</td>
                     <td>{provider.purpose}</td>
                     <td>
-                      <span className="quality-label">Not connected</span>
+                      <span className="quality-label">
+                        {provider.name === 'Binance' &&
+                        marketQuery.data?.providers.length
+                          ? marketQuery.data.providers
+                              .map(
+                                (item) =>
+                                  `${item.providerId.replace('binance:', '')}: ${item.status}`,
+                              )
+                              .join(' · ')
+                          : 'Not connected'}
+                      </span>
                     </td>
-                    <td>—</td>
+                    <td>
+                      {provider.name === 'Binance' &&
+                      marketQuery.data?.providers.find(
+                        (item) => item.lastSuccessAt,
+                      )?.lastSuccessAt
+                        ? new Date(
+                            marketQuery.data.providers.find(
+                              (item) => item.lastSuccessAt,
+                            )!.lastSuccessAt!,
+                          ).toLocaleTimeString('en-GB', {
+                            timeZone: 'Asia/Jakarta',
+                          }) + ' WIB'
+                        : '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -528,63 +546,77 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
   );
 }
 
-function Inspector() {
+function Inspector({
+  market,
+  clear,
+}: {
+  market: MarketRow | null;
+  clear: () => void;
+}) {
   return (
-    <aside className="inspector" aria-label="Asset inspector">
-      <Panel title="Asset inspector" detail="NO SELECTION">
-        <div className="inspector-intro">
-          <span className="entity-placeholder">
-            <Icon name="diamond" />
-          </span>
-          <div>
-            <h3>Select an asset</h3>
-            <p>A verified record is required</p>
-          </div>
-        </div>
-        <div className="inspector-tabs">
-          <span>Overview</span>
-          <span>On-chain</span>
-          <span>Derivatives</span>
-        </div>
-        <dl className="asset-metrics">
-          {[
-            'Price · USD',
-            'Market cap',
-            '24H volume',
-            'Open interest',
-            'Funding rate',
-          ].map((metric) => (
-            <div key={metric}>
-              <dt>{metric}</dt>
-              <dd>—</dd>
+    <aside className="inspector" aria-label="Asset inspector" tabIndex={-1}>
+      {market ? (
+        <MarketInspector market={market} clear={clear} />
+      ) : (
+        <Panel title="Asset inspector" detail="NO SELECTION">
+          <div className="inspector-intro">
+            <span className="entity-placeholder">
+              <Icon name="diamond" />
+            </span>
+            <div>
+              <h3>Select an asset</h3>
+              <p>A verified record is required</p>
             </div>
-          ))}
-        </dl>
-        <div className="inspector-message">
-          The scanner will populate this inspector when market data is
-          connected.
-        </div>
-        <h3 className="inspector-subheading">Data provenance</h3>
-        <div className="provenance-empty">
-          <span>Source</span>
-          <b>Unavailable</b>
-          <span>Quality</span>
-          <b>Unclassified</b>
-          <span>Source timestamp</span>
-          <b>—</b>
-          <span>Ingested at</span>
-          <b>—</b>
-          <span>Methodology</span>
-          <b>—</b>
-        </div>
-        <p className="provenance-note">
-          No value is treated as a fact without attribution.
-        </p>
-      </Panel>
-      <Panel title="Analyst memo" detail="NO EVIDENCE">
+          </div>
+          <div className="inspector-tabs">
+            <span>Overview</span>
+            <span>On-chain</span>
+            <span>Derivatives</span>
+          </div>
+          <dl className="asset-metrics">
+            {[
+              'Price · USD',
+              'Market cap',
+              '24H volume',
+              'Open interest',
+              'Funding rate',
+            ].map((metric) => (
+              <div key={metric}>
+                <dt>{metric}</dt>
+                <dd>—</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="inspector-message">
+            The scanner will populate this inspector when market data is
+            connected.
+          </div>
+          <h3 className="inspector-subheading">Data provenance</h3>
+          <div className="provenance-empty">
+            <span>Source</span>
+            <b>Unavailable</b>
+            <span>Quality</span>
+            <b>Unclassified</b>
+            <span>Source timestamp</span>
+            <b>—</b>
+            <span>Ingested at</span>
+            <b>—</b>
+            <span>Methodology</span>
+            <b>—</b>
+          </div>
+          <p className="provenance-note">
+            No value is treated as a fact without attribution.
+          </p>
+        </Panel>
+      )}
+      <Panel title="Analyst memo" detail="AI NOT CONNECTED">
         <div className="analyst-memo">
           <h3>Facts</h3>
-          <p>No market observations are available.</p>
+          <p>
+            {market
+              ? `${market.base} has a timestamped spot price of ${formatNumber(market.price)} ${market.quote}.`
+              : 'No market observations are available.'}
+          </p>
           <h3>Derived signals</h3>
           <p>Awaiting validated inputs and versioned calculations.</p>
           <h3>Interpretation</h3>
@@ -592,7 +624,10 @@ function Inspector() {
           <h3>Counter-evidence</h3>
           <p>Coverage cannot yet be assessed.</p>
           <h3>Sources</h3>
-          <p>None connected. No AI response generated.</p>
+          <p>
+            {market ? market.provenance.providerId : 'None connected'}. No AI
+            response generated.
+          </p>
         </div>
       </Panel>
       <div className="inspector-footer">
@@ -608,6 +643,9 @@ export function TerminalShell({
 }: {
   workspace?: string;
 }) {
+  const query = useMarketData();
+  const { selected, setSelected } = useMarketSelection();
+  const market = query.data?.rows.find((row) => row.id === selected) ?? null;
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [offline, setOffline] = useState(false);
@@ -670,7 +708,13 @@ export function TerminalShell({
           <span className="status-dot" />
           <div>
             <strong>DATA</strong>
-            <small>NOT CONNECTED</small>
+            <small>
+              {query.data?.rows.length
+                ? query.data.rows.some((row) => row.freshness === 'STALE')
+                  ? 'STALE / PARTIAL'
+                  : 'OBSERVED'
+                : 'NOT CONNECTED'}
+            </small>
           </div>
         </div>
         <div className="header-status ai-status">
@@ -681,7 +725,7 @@ export function TerminalShell({
           </div>
         </div>
       </header>
-      <div className="market-tape" aria-label="Market tape, data unavailable">
+      <div className="market-tape" aria-label="Market tape">
         {[
           'BTC',
           'ETH',
@@ -690,13 +734,26 @@ export function TerminalShell({
           'BTC.D',
           'FUNDING',
           'OPEN INTEREST',
-        ].map((asset) => (
-          <div key={asset}>
-            <strong>{asset}</strong>
-            <span>—</span>
-          </div>
-        ))}
-        <span className="tape-state">No live feed</span>
+        ].map((asset) => {
+          const observation = query.data?.rows.find(
+            (row) => row.base === asset,
+          );
+          return (
+            <div key={asset}>
+              <strong>{asset}</strong>
+              <span>
+                {observation
+                  ? `${formatNumber(observation.price)} USDT · ${observation.freshness}`
+                  : '—'}
+              </span>
+            </div>
+          );
+        })}
+        <span className="tape-state">
+          {query.data?.rows.length
+            ? 'Source timestamps in inspector'
+            : 'No live feed'}
+        </span>
       </div>
       <div className="terminal-body">
         <nav className="sidebar" aria-label="Terminal navigation">
@@ -717,7 +774,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Foundation · Phase 0
+            Market core · Phase 1
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -727,7 +784,25 @@ export function TerminalShell({
             </div>
           )}
           {workspace === 'dashboard' ? (
-            <Dashboard />
+            <Dashboard
+              selected={selected}
+              onSelect={setSelected}
+              market={market}
+            />
+          ) : ['markets', 'screener', 'derivatives'].includes(workspace) ? (
+            <>
+              <div className="workspace-heading">
+                <div>
+                  <span className="eyebrow">MARKET RESEARCH</span>
+                  <h1>{entry?.label}</h1>
+                </div>
+                <span className="workspace-note">
+                  Database observations · source timestamps preserved
+                </span>
+              </div>
+              <MarketScanner selected={selected} onSelect={setSelected} />
+              <PriceHistory market={market} />
+            </>
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -758,12 +833,14 @@ export function TerminalShell({
             </>
           )}
         </main>
-        <Inspector />
+        <Inspector market={market} clear={() => setSelected(null)} />
       </div>
       <footer className="terminal-footer">
         <span>
           <i className="status-dot" />
-          External sources disconnected
+          {query.data?.rows.length
+            ? 'Observed market data · freshness visible'
+            : 'External sources disconnected'}
         </span>
         <span>All timestamps · WIB</span>
         <span>

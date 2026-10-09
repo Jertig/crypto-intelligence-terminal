@@ -18,9 +18,11 @@ from actual container port bindings. Compose's `port` command can emit
 `invalid IP:0` for an unpublished port; its textual output is not an isolation
 test.
 
-The Phase 0 pull request is <https://github.com/Jertig/crypto-intelligence-terminal/pull/1>.
-Review the feature branch and CI before approving progression. Approval does not
-authorize a VPS deployment unless explicitly requested.
+Phase 0 PR #1 was approved and merged with latest checks green. The user
+authorized Phases 1–8 sequentially without routine approvals. Each phase uses
+a feature branch, full local QA report, coherent commits, a PR, and a merge
+only when latest head CI is green. Phase 1 uses `feat/market-core`.
+This authorization does not include remote VPS deployment.
 
 Project model configuration records the user's requested GPT-6.1 Sol with High
 reasoning. Project settings do not retroactively prove the effort of an already
