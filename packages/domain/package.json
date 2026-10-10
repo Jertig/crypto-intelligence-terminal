@@ -14,7 +14,8 @@
     "./wallets": "./src/wallets.ts",
     "./events": "./src/events.ts",
     "./analyst": "./src/analyst.ts",
-    "./request-security": "./src/request-security.ts"
+    "./request-security": "./src/request-security.ts",
+    "./research": "./src/research.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
