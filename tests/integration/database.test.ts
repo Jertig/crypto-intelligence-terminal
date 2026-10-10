@@ -52,7 +52,7 @@ describe('PostgreSQL foundation', () => {
       await connection.client`SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations`;
     const [provider] =
       await connection.client`SELECT count(*)::int AS count FROM provider_health`;
-    expect(migration?.count).toBe(4);
+    expect(migration?.count).toBe(5);
     expect(provider?.count).toBe(0);
   });
   it('enforces unique provider records', async () => {

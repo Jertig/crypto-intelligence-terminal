@@ -8,7 +8,8 @@
     "./schema": "./src/schema.ts",
     "./heartbeat": "./src/heartbeat.ts",
     "./market": "./src/market.ts",
-    "./intelligence": "./src/intelligence.ts"
+    "./intelligence": "./src/intelligence.ts",
+    "./tokens": "./src/tokens.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
