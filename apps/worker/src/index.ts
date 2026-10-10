@@ -10,30 +10,45 @@ import { TokenEngine } from './token-engine';
 import { WalletEngine } from './wallet-engine';
 import { MacroEngine } from './macro-engine';
 import { ResearchEngine } from './research-engine';
+import { OperationsEngine } from './operations-engine';
 
 async function start() {
   const config = readEnvironment(process.env, true);
   if (!config.DATABASE_URL) throw new Error('DATABASE_URL_REQUIRED');
   const connection = createDatabase(config.DATABASE_URL);
   const instanceId = randomUUID();
-  const walletEngine = new WalletEngine(connection, config);
-  const macroEngine = new MacroEngine(connection, config.FRED_API_KEY);
-  const researchEngine = new ResearchEngine(connection);
   const startedAt = new Date();
   let lastSuccessAt: Date | null = null;
   let stopping = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: Promise<void> | undefined;
-  const marketEngine =
-    config.MARKET_INGESTION_ENABLED === 'false'
-      ? undefined
-      : new MarketEngine(connection, config);
-  const tokenEngine =
-    config.TOKEN_INGESTION_ENABLED === 'true' ||
-    (config.TOKEN_INGESTION_ENABLED !== 'false' &&
-      config.MARKET_INGESTION_ENABLED !== 'false')
-      ? new TokenEngine(connection, config)
-      : undefined;
+  let engines: { start(): void; stop(): Promise<void> }[] = [];
+  const operations = new OperationsEngine(
+    connection,
+    config.STORAGE_GUARD_ENABLED === 'true',
+    async (allowed) => {
+      if (!allowed || stopping) {
+        const previous = engines;
+        engines = [];
+        await Promise.all(previous.map((engine) => engine.stop()));
+      } else if (!engines.length) {
+        engines = [
+          ...(config.MARKET_INGESTION_ENABLED !== 'false'
+            ? [new MarketEngine(connection, config)]
+            : []),
+          ...(config.TOKEN_INGESTION_ENABLED === 'true' ||
+          (config.TOKEN_INGESTION_ENABLED !== 'false' &&
+            config.MARKET_INGESTION_ENABLED !== 'false')
+            ? [new TokenEngine(connection, config)]
+            : []),
+          new WalletEngine(connection, config),
+          new MacroEngine(connection, config.FRED_API_KEY),
+          new ResearchEngine(connection),
+        ];
+        engines.forEach((engine) => engine.start());
+      }
+    },
+  );
 
   async function beat() {
     try {
@@ -68,8 +83,13 @@ async function start() {
     response.end(
       JSON.stringify({
         status: ready ? 'ok' : 'unavailable',
-        mode: marketEngine ? 'market-core' : 'idle',
-        ingestion: marketEngine ? 'RUNNING' : 'DISABLED',
+        mode:
+          config.MARKET_INGESTION_ENABLED !== 'false' ? 'market-core' : 'idle',
+        ingestion: !engines.length
+          ? 'PROTECTED_OR_INITIALIZING'
+          : config.MARKET_INGESTION_ENABLED !== 'false'
+            ? 'RUNNING'
+            : 'DISABLED',
       }),
     );
   });
@@ -85,11 +105,7 @@ async function start() {
     }, config.HEARTBEAT_INTERVAL_MS);
   }
   schedule();
-  marketEngine?.start();
-  tokenEngine?.start();
-  walletEngine.start();
-  macroEngine.start();
-  researchEngine.start();
+  operations.start();
 
   async function shutdown(exitCode: number) {
     if (stopping) return;
@@ -102,11 +118,8 @@ async function start() {
     );
     server.closeAllConnections();
     await drainWorkerDatabase(connection, config.DATABASE_URL!, instanceId, [
-      ...(marketEngine ? [marketEngine.stop()] : []),
-      ...(tokenEngine ? [tokenEngine.stop()] : []),
-      walletEngine.stop(),
-      macroEngine.stop(),
-      researchEngine.stop(),
+      operations.stop(),
+      ...engines.map((engine) => engine.stop()),
     ]);
     await pending;
     await httpClosed;
@@ -121,7 +134,7 @@ async function start() {
     void shutdown(0);
   });
   console.info(
-    marketEngine
+    config.MARKET_INGESTION_ENABLED !== 'false'
       ? 'Worker ready. Bounded public market ingestion enabled.'
       : 'Worker ready. Market ingestion explicitly disabled.',
   );
