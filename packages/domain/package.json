@@ -7,7 +7,9 @@
     ".": "./src/index.ts",
     "./environment": "./src/environment.ts",
     "./health": "./src/health.ts",
-    "./market": "./src/market.ts"
+    "./market": "./src/market.ts",
+    "./intelligence": "./src/intelligence.ts",
+    "./signals": "./src/signals.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

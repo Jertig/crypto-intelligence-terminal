@@ -11,7 +11,17 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 1 bounded plan
+## Phase 2 bounded plan
+
+Compute closed-bar features and sampled breadth/regime with strict evidence
+gates. Persist versioned typed snapshots, curated weighted taxonomy and
+explanations. Reuse the single worker and query layer. Deliver dense narrative
+matrix/detail and selected feature inspection. Document all formulas and missing
+inputs. Complete the full QA gate, push coherent commits, open a PR, merge only
+latest green CI, then begin Phase 3. Wallet/protocol component inputs remain
+unavailable until their later bounded implementation.
+
+## Completed Phase 1 plan
 
 1. Preserve the four-service topology and ivory shell. Add shared normalized
    market contracts and a public-data-only Binance adapter with bounded requests,

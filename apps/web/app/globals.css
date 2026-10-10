@@ -295,6 +295,88 @@ input {
   position: relative;
   font-size: 10px;
 }
+.feature-inspector table {
+  table-layout: fixed;
+  white-space: normal;
+  font-size: 9px;
+}
+.feature-inspector td {
+  padding: 7px 9px;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.feature-inspector summary {
+  cursor: pointer;
+}
+.feature-inspector small,
+.regime-panel small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 8px;
+  margin-top: 4px;
+  white-space: normal;
+}
+.feature-inspector details p {
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.derived-evidence {
+  padding-left: 16px;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.intelligence-summary {
+  padding: 8px 10px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.intelligence-summary table {
+  font-size: 9px;
+}
+.intelligence-summary td {
+  padding: 7px 3px;
+  white-space: normal;
+}
+.intelligence-summary a {
+  color: var(--green);
+}
+.narrative-matrix,
+.narrative-detail,
+.regime-panel {
+  margin-bottom: 10px;
+}
+.narrative-matrix tbody tr {
+  cursor: pointer;
+}
+.narrative-matrix tr[aria-selected='true'] {
+  background: #137d7014;
+  box-shadow: inset 2px 0 var(--green);
+}
+.narrative-members {
+  padding: 4px 12px 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.narrative-members > div {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+}
+.narrative-members h3 {
+  font:
+    13px Georgia,
+    serif;
+  color: var(--text);
+}
+.regime-panel td:first-child {
+  white-space: normal;
+}
+.narrative-matrix .scanner-toolbar {
+  flex-wrap: wrap;
+}
 .column-picker summary {
   cursor: pointer;
 }

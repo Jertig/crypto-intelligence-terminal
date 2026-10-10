@@ -56,7 +56,7 @@ export async function GET(request: Request) {
   }
   const result = {
     ...systemHealth(database, heartbeat, new Date()),
-    phase: 1,
+    phase: 2,
     providers: {
       configured: new Set(providers.map((row) => row.providerId.split(':')[0]))
         .size,
