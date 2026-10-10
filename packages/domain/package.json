@@ -15,7 +15,8 @@
     "./events": "./src/events.ts",
     "./analyst": "./src/analyst.ts",
     "./request-security": "./src/request-security.ts",
-    "./research": "./src/research.ts"
+    "./research": "./src/research.ts",
+    "./operations": "./src/operations.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,4 +1,18 @@
 import { sql } from 'drizzle-orm';
+import type { Operations } from '@terminal/domain/operations';
+export const operationsStatus = pgTable(
+  'operations_status',
+  {
+    id: text('id').primaryKey(),
+    observation: jsonb('observation').$type<Operations>().notNull(),
+  },
+  (t) => [
+    check(
+      'operations_bounded',
+      sql`${t.id}='primary' AND octet_length(${t.observation}::text)<=8192`,
+    ),
+  ],
+);
 import type { AlertRule, Evaluation } from '@terminal/domain/research';
 import type { AnalystMemo } from '@terminal/domain/analyst';
 export const watchlists = pgTable(

@@ -36,8 +36,11 @@ daily candles permanently, funding/OI for one year, provider-run logs for 14 day
 Deletes are capped at 5,000 records per table/interval per run. Feature/signal
 retention for 180 days arrives with those tables. Target database size is below
 8 GB. Disk warnings at 70/80%
-and protective ingestion action at 90% are later hardening work.
+and protective ingestion action at 90% are now implemented in Phase 8.
 
-Planned backups: seven daily, four weekly, three monthly. Off-host storage and a
-verified restore are required before production. No backup automation is claimed
-in Phase 0.
+Phase 8 adds seven daily, four weekly and three monthly backup buckets, an archive
+budget, daily host timer and disposable restore verification. Off-host storage and
+a clean-host restore remain required before production. See production-operations.md
+and disaster-recovery.md. Phase 0's local configuration is retained for development;
+secured production uses explicit administrator migrations and limited runtime
+roles instead of migration privileges in the long-running worker.

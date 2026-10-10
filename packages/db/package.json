@@ -13,7 +13,8 @@
     "./wallets": "./src/wallets.ts",
     "./events": "./src/events.ts",
     "./analyst": "./src/analyst.ts",
-    "./research": "./src/research.ts"
+    "./research": "./src/research.ts",
+    "./operations": "./src/operations.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -1,0 +1,12 @@
+# Explicit isolated loopback override. Never use for a public deployment.
+services:
+  worker:
+    volumes:
+      !override [
+        'postgres-data:/capacity:ro',
+        './data/operations-qa:/operations:ro',
+      ]
+  caddy:
+    ports: !override ['127.0.0.1:18080:80', '127.0.0.1:18443:18443']
+    environment:
+      TLS_PROFILE: local_tls

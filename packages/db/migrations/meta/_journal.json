@@ -78,6 +78,13 @@
       "when": 1791651056193,
       "tag": "0010_steady_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791663125187,
+      "tag": "0011_giant_tyrannus",
+      "breakpoints": true
     }
   ]
 }

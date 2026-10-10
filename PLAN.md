@@ -11,7 +11,18 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 7 bounded plan
+## Completed Phase 8 bounded plan
+
+Phase 7 merged through PR #8 after fourteen exact-head green checks. Preserve all
+prior contracts and coverage. Add four-service production Compose, secure gateway
+HTTPS, restricted runtime roles, explicit administrator migrations, resource/log
+bounds, storage protection, credential-independent cleanup, bounded backup/timer
+and disposable restore verification. Add operational status to the existing ivory
+terminal, complete provider/AI/resource/security/visual reviews, document recovery
+and finish the portfolio. Require full QA and exact-head green CI before merge,
+then audit main. No VPS deployment, purchases or new heavy infrastructure.
+
+## Completed Phase 7 plan
 
 Preserve all merged work. Add typed bounded watchlists, notes with edit conflicts,
 structured saved queries, functional scanner views, frozen evidence reports and

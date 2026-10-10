@@ -1,0 +1,14 @@
+[Unit]
+Description=Crypto terminal bounded PostgreSQL backup
+Requires=docker.service
+After=docker.service
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/crypto-intelligence-terminal
+ExecStart=/usr/bin/node infra/ops/terminal.mjs backup
+User=terminal
+Group=terminal
+UMask=0077
+TimeoutStartSec=180
+StandardOutput=journal
+StandardError=journal

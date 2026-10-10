@@ -61,3 +61,21 @@ Zod validation, server-side credentials, bounded connection pools, and a single
 worker. Do not introduce Redis, Python services, or a heavy observability stack.
 
 The complete requirements are in `specification/02_ARCHITECTURE_AND_DATA_SPEC.md`.
+
+## Production operations
+
+Phase 8 keeps four runtime services and adds one bounded operations singleton
+(37 tables, twelve migrations). The existing worker observes disk/DB capacity and
+performs credential-independent maintenance. Protected/unknown capacity pauses
+engine groups while heartbeat and retained reads continue. Production research
+writes fail closed on absent/stale status. Operational measurements introduce no
+market facts or research methodology.
+
+Caddy authenticates the shared operator over HTTPS before all routes; its internal
+loopback health listener is not published. Separate web/worker PostgreSQL roles
+cannot create schemas or assume the administrator. Administrator migrations/grants
+are explicit one-off operations. Prebuilt pinned images, read-only application
+roots, resource caps and bounded logs fit the target deployment model. Host backup
+automation and the disposable restore verifier use the internal database. Off-host
+recovery remains a required operator configuration. See production-operations.md,
+deployment.md and disaster-recovery.md for the trust and retention model.

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { AnalystWorkspace, AnalystInspector } from './analyst-workspace';
 import { ResearchWorkspace, ResearchInspector } from './research-workspace';
+import { OperationsPanel } from './operations-panel';
 import { TokenWorkspace, TokenInspector } from './token-workspace';
 import { WalletWorkspace, WalletInspector } from './wallet-workspace';
 import {
@@ -406,7 +407,7 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
         </span>
       </div>
       {workspace === 'data-status' && (
-        <Panel title="Runtime health" detail="LOCAL FOUNDATION">
+        <Panel title="Runtime health" detail="DEPENDENCY HEALTH">
           <div className="system-health" aria-live="polite">
             {state.kind === 'loading' ? (
               <p role="status">Checking runtime health…</p>
@@ -450,6 +451,7 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
           </div>
         </Panel>
       )}
+      {workspace === 'data-status' && <OperationsPanel />}
       {workspace !== 'settings' ? (
         <Panel title="API sources" detail="CAPABILITY HEALTH">
           <div className="table-scroll">
@@ -771,7 +773,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Research workflow · Phase 7
+            Research terminal · Phase 8
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -836,8 +838,8 @@ export function TerminalShell({
                   icon={entry?.icon ?? 'document'}
                 >
                   {entry?.label} requires the data and research capabilities
-                  planned for Phase {entry?.phase}. No placeholder observations
-                  are shown.
+                  requires additional verified provider evidence. No placeholder
+                  observations are shown.
                 </Empty>
                 <div className="panel-foot">
                   <Link href="/data-status">Inspect connected sources ↗</Link>

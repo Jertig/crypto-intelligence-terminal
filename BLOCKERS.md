@@ -25,10 +25,11 @@ No local implementation blocker requires user intervention.
   same-pool warm-up history remain explicitly unavailable.
 - The development-tool braces advisory remains version-flagged. Its pinned local
   depth guard has regression tests. Production audit is clean; no suppression.
-- Helius/FRED/LLM credentials may be absent later; continue with adapters,
+- Helius/FRED/LLM credentials remain absent; continue with adapters,
   fixtures, unavailable states and documentation.
-- Authentication, production TLS, backups and disk protection are Phase 8 scope.
-  Current preview is loopback-only. No VPS deployment occurred.
+- Phase 8 implements gateway authentication/HTTPS, bounded backups, role separation
+  and disk protection. Public certificate/domain, actual VPS capacity, host timer
+  installation and off-host restore remain unverified; no VPS deployment occurred.
 - Resource checks are local, not production-capacity certification.
 - Phase 6 model key, model ID and explicit enablement are absent. Read-only
   evidence briefs work; live model access/schema support/latency are unverified.
