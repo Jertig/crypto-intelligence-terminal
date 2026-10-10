@@ -20,6 +20,21 @@ const databaseUrlSchema = z
   }, 'A PostgreSQL URI with server-side credentials is required.');
 
 const environmentSchema = z.object({
+  AI_ANALYST_ENABLED: z.preprocess(
+    blankToUndefined,
+    z.enum(['true', 'false']).optional(),
+  ),
+  OPENAI_API_KEY: z.preprocess(
+    blankToUndefined,
+    z.string().min(1).max(4096).optional(),
+  ),
+  OPENAI_MODEL: z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .regex(/^[a-zA-Z0-9_.:-]{1,100}$/)
+      .optional(),
+  ),
   FRED_API_KEY: z.preprocess(
     blankToUndefined,
     z.string().min(1).max(4096).optional(),

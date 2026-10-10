@@ -9,7 +9,8 @@
     "./stream": "./src/stream.ts",
     "./token-data": "./src/token-data.ts",
     "./helius": "./src/helius.ts",
-    "./fred": "./src/fred.ts"
+    "./fred": "./src/fred.ts",
+    "./analyst": "./src/analyst.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
