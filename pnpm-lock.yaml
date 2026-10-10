@@ -70,6 +70,9 @@ importers:
       '@terminal/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@terminal/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(postgres@3.4.9)

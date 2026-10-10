@@ -15,6 +15,12 @@ instance on SIGTERM/SIGINT. A heartbeat older than 30 seconds is stale. Database
 connections are bounded to two per application, with connect/query time limits.
 No raw credentials or database errors are returned to clients.
 
+Shutdown closes the worker's health listener, aborts provider loops and cancels
+queued/active ingestion connections before awaiting tasks. Unfinished transactions
+roll back. A separate bounded cleanup connection removes only this instance's
+heartbeat; failed cleanup is explicitly logged and the heartbeat ages out. The
+eight-second process deadline and ten-second Compose grace period are unchanged.
+
 Phase 1 runs one combined ticker/closed-1m stream. Silent streams are stale after
 45 seconds and reconnect with jittered exponential backoff, capped at 60 seconds.
 Connections rotate before the 24-hour provider limit. REST timeout is eight

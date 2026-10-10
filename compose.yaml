@@ -14,6 +14,9 @@ services:
       target: web
     environment:
       DATABASE_URL: postgresql://terminal:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/terminal
+      AI_ANALYST_ENABLED: ${AI_ANALYST_ENABLED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
     depends_on:
       postgres:
         condition: service_healthy

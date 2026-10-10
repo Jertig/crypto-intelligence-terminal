@@ -12,7 +12,9 @@
     "./signals": "./src/signals.ts",
     "./token-risk": "./src/token-risk.ts",
     "./wallets": "./src/wallets.ts",
-    "./events": "./src/events.ts"
+    "./events": "./src/events.ts",
+    "./analyst": "./src/analyst.ts",
+    "./request-security": "./src/request-security.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

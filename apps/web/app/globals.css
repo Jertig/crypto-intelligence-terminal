@@ -1348,3 +1348,47 @@ td:first-child {
     gap: 6px;
   }
 }
+.analyst-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.analyst-form > label {
+  display: grid;
+  gap: 6px;
+}
+.analyst-form textarea {
+  width: 100%;
+  min-height: 74px;
+  max-height: 180px;
+  resize: vertical;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-elevated);
+  color: var(--text);
+  font: inherit;
+  padding: 8px;
+}
+.analyst-form fieldset {
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.analyst-form button {
+  justify-self: start;
+  padding: 8px 12px;
+}
+.analyst-workspace td {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  min-width: 120px;
+  max-width: 360px;
+}
+.analyst-workspace table {
+  min-width: 760px;
+}
+.analyst-workspace td small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.5;
+}

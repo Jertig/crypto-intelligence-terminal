@@ -1,5 +1,11 @@
 # Architecture
 
+Phase 6 adds read-only bounded evidence tools, explicit grounding/freshness gates,
+an optional stateless model adapter and a six-part analyst memo. Structured model
+selection cannot replace factual values or invent citations. All tools use fixed
+database queries; no table, service or third-party dependency added. See
+[evidence policy and bounds](ai-analyst.md).
+
 Phase 5 adds three tables and migration 0009: observed macro revisions, immutable
 sourced events and versioned event impacts. A bounded hourly engine in the same
 worker coordinates fixed-origin FRED collection and retrospective event windows.
@@ -33,8 +39,10 @@ The repository contains `apps/web`, `apps/worker`, `packages/domain`,
 bounded streaming, snapshots, OHLCV, funding/OI persistence and query APIs.
 Phase 2 adds pure feature, narrative and signal engines in the domain package,
 typed wide snapshots, bounded schedules and a database-only intelligence API.
-Risk, wallets, events and macro are additive Phases 3–5; AI remains Phase 6.
-Web requests read PostgreSQL; they never fan out to providers.
+Risk, wallets, events and macro are additive Phases 3–5. Phase 6 adds the analyst.
+Market-data requests read PostgreSQL without provider fan-out. The optional
+explicitly enabled analyst can call its fixed model provider on user submission;
+its tools still read only bounded database projections.
 
 The web shell can render with no database or provider configured. A liveness check
 must distinguish a running web process from database readiness. The worker must
