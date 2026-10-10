@@ -23,6 +23,7 @@ export const providerHealthSchema = z
 export type ProviderHealth = z.infer<typeof providerHealthSchema>;
 export type DatabaseState = 'READY' | 'UNAVAILABLE' | 'NOT_CONFIGURED';
 export function providerFreshnessMs(providerId: string) {
+  if (providerId === 'helius') return 1800000;
   if (providerId === 'dexscreener') return 1800000;
   if (providerId === 'goplus') return 7200000;
   return providerId.includes('perpetual') ? 600000 : 90000;

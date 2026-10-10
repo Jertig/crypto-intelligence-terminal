@@ -20,6 +20,14 @@ const databaseUrlSchema = z
   }, 'A PostgreSQL URI with server-side credentials is required.');
 
 const environmentSchema = z.object({
+  HELIUS_API_KEY: z.preprocess(
+    blankToUndefined,
+    z.string().min(1).max(4096).optional(),
+  ),
+  TRACKED_WALLETS: z.preprocess(
+    blankToUndefined,
+    z.string().max(4000).optional(),
+  ),
   TOKEN_INGESTION_ENABLED: z.preprocess(
     blankToUndefined,
     z.enum(['true', 'false']).optional(),

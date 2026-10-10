@@ -10,7 +10,8 @@
     "./market": "./src/market.ts",
     "./intelligence": "./src/intelligence.ts",
     "./signals": "./src/signals.ts",
-    "./token-risk": "./src/token-risk.ts"
+    "./token-risk": "./src/token-risk.ts",
+    "./wallets": "./src/wallets.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

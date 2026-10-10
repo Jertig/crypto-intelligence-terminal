@@ -1,5 +1,11 @@
 # Blockers and verification limits
 
+- Phase 4 Helius credential and tracked-wallet configuration are absent. Adapter,
+  persistence, explorer and deterministic tests exist; live wallet integration is
+  unverified. Four requests/day rotates bounded address polling; incomplete coverage
+  and uncalibrated reputation remain explicit. Missing cost basis/outcome evidence
+  does not become estimates or activity-based profitability scores.
+
 No local implementation blocker requires user intervention.
 
 - Binance public spot REST and stream work locally. Futures requests time out;

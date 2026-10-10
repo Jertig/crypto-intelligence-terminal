@@ -36,6 +36,34 @@
       "when": 1791607846470,
       "tag": "0004_complex_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791632186448,
+      "tag": "0005_overrated_the_call",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791632724812,
+      "tag": "0006_useful_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791633466526,
+      "tag": "0007_condemned_prism",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791635438215,
+      "tag": "0008_noisy_hairball",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,15 @@ test('workspace navigation opens the market core and discloses later planned fun
     .getByRole('link', { name: 'Wallets', exact: true })
     .click();
   await expect(page).toHaveURL('/wallets');
+  await expect(page.getByText('No tracked wallets configured')).toBeVisible();
+  await expect(
+    page.getByRole('complementary', { name: 'Wallet evidence inspector' }),
+  ).toBeVisible();
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'AI Analyst', exact: true })
+    .click();
+  await expect(page).toHaveURL('/ai-analyst');
   await expect(
     page.getByText('This workspace is not available yet', { exact: true }),
   ).toBeVisible();
@@ -62,6 +71,9 @@ test('command palette supports filtering, arrow keys, Enter and Escape', async (
   page,
 }) => {
   await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Open command palette' }),
+  ).toBeEnabled();
   await page.keyboard.press('Control+k');
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
