@@ -11,7 +11,21 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 3 bounded plan
+## Phase 4 bounded plan
+
+1. Complete Phase 4 only on feat/wallet-intelligence: bounded Helius adapter,
+   tracked wallets, transaction/transfer persistence and compaction, labels,
+   explainable behavior/reputation methodology, actual relationships, explorer.
+2. Preserve unavailable evidence, uncalibrated scores and missing credentials;
+   no full-chain indexing, ownership/insider allegations or signing/trading.
+3. Run the complete 05_TESTING_QA_PROMPT.md gate, fix defects, inspect ivory UI,
+   document limitations/resource/security findings, commit coherently and push.
+4. Open PR and merge only all latest green CI checks on the exact branch head.
+5. Continue Phases 5, 6, 7 and 8 in order, with one bounded branch and full QA
+   each. No paid purchases, secret commits, destructive history rewrites or VPS
+   deployment. Finish with the repository-wide audit and final report.
+
+## Completed Phase 3 plan
 
 1. Reuse existing domain/provider/database contracts and the single worker.
    Add fixed-origin DEX Screener and optional GoPlus adapters, timeouts, rate-limit

@@ -1,5 +1,12 @@
 # Architecture
 
+Phase 4 adds an optional bounded wallet coordinator in the same worker, four
+additive tables across four new migrations, and a database-only wallet DTO route.
+Normalized finalized transaction evidence is deduplicated per tracked address;
+compaction is transactional and the daily provider budget persists across restarts.
+Domain helpers classify observed activity and explain relationship groups without
+common-owner claims. No additional services or dependencies. See [wallet methodology](wallet-intelligence.md).
+
 Phase 3 adds a bounded token coordinator to the existing worker and five additive
 tables via migration 0004. It writes selected DEX pools, security evidence and
 separate versioned indicators. The Tokens/Risk workspaces query stored DTOs;

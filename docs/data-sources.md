@@ -9,7 +9,7 @@ or fabricated values are used in the production application.
 | Binance      | Spot, derivatives, candles, selected streams | Spot observed; futures adapter tested, locally unavailable |
 | CoinGecko    | Global identity, metadata, categories        | Not connected                                              |
 | DEX Screener | Selected base pools, liquidity, volume       | Bounded public adapter; 15-minute polling                  |
-| Helius       | Explicitly tracked Solana wallets            | Phase 4                                                    |
+| Helius       | Explicitly tracked Solana wallets            | Adapter tested; credential and wallet list absent          |
 | DefiLlama    | Selected protocol/chain metrics              | Not connected                                              |
 | FRED         | Macro observations and revisions             | Phase 5                                                    |
 | GoPlus       | Optional authority and holder evidence       | Bounded public adapter; hourly polling                     |

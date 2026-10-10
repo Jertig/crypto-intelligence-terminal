@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { TokenWorkspace, TokenInspector } from './token-workspace';
+import { WalletWorkspace, WalletInspector } from './wallet-workspace';
 import {
   MarketScanner,
   MarketInspector,
@@ -249,7 +250,7 @@ function CommandPalette({
             <small>
               {'phase' in item &&
               typeof item.phase === 'number' &&
-              item.phase > 3
+              item.phase > 4
                 ? 'Not available yet'
                 : 'Open'}
             </small>
@@ -632,6 +633,7 @@ export function TerminalShell({
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [offline, setOffline] = useState(false);
+  const [interactive, setInteractive] = useState(false);
   const open = useCallback(() => {
     dialog.current?.showModal();
   }, []);
@@ -654,7 +656,10 @@ export function TerminalShell({
         open();
       }
     };
-    const online = () => setOffline(!navigator.onLine);
+    const online = () => {
+      setOffline(!navigator.onLine);
+      setInteractive(true);
+    };
     window.addEventListener('keydown', keyboard);
     window.addEventListener('online', online);
     window.addEventListener('offline', online);
@@ -679,6 +684,7 @@ export function TerminalShell({
         <button
           className="command-trigger"
           ref={trigger}
+          disabled={!interactive}
           onClick={open}
           aria-label="Open command palette"
         >
@@ -757,7 +763,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Token & liquidity intelligence · Phase 3
+            Solana wallet intelligence · Phase 4
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -790,6 +796,8 @@ export function TerminalShell({
             <NarrativeWorkspace />
           ) : ['tokens', 'risk'].includes(workspace) ? (
             <TokenWorkspace riskView={workspace === 'risk'} />
+          ) : ['wallets', 'on-chain'].includes(workspace) ? (
+            <WalletWorkspace />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -822,6 +830,8 @@ export function TerminalShell({
         </main>
         {['tokens', 'risk'].includes(workspace) ? (
           <TokenInspector />
+        ) : ['wallets', 'on-chain'].includes(workspace) ? (
+          <WalletInspector />
         ) : (
           <Inspector market={market} clear={() => setSelected(null)} />
         )}
