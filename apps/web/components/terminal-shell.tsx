@@ -4,6 +4,12 @@ import Link from 'next/link';
 import { TokenWorkspace, TokenInspector } from './token-workspace';
 import { WalletWorkspace, WalletInspector } from './wallet-workspace';
 import {
+  EventsWorkspace,
+  EventInspector,
+  MacroWorkspace,
+  MacroInspector,
+} from './events-workspace';
+import {
   MarketScanner,
   MarketInspector,
   PriceHistory,
@@ -250,7 +256,7 @@ function CommandPalette({
             <small>
               {'phase' in item &&
               typeof item.phase === 'number' &&
-              item.phase > 4
+              item.phase > 5
                 ? 'Not available yet'
                 : 'Open'}
             </small>
@@ -763,7 +769,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Solana wallet intelligence · Phase 4
+            Events & macro research · Phase 5
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -798,6 +804,10 @@ export function TerminalShell({
             <TokenWorkspace riskView={workspace === 'risk'} />
           ) : ['wallets', 'on-chain'].includes(workspace) ? (
             <WalletWorkspace />
+          ) : ['events', 'event-study', 'news'].includes(workspace) ? (
+            <EventsWorkspace />
+          ) : ['macro', 'economic'].includes(workspace) ? (
+            <MacroWorkspace />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -832,6 +842,10 @@ export function TerminalShell({
           <TokenInspector />
         ) : ['wallets', 'on-chain'].includes(workspace) ? (
           <WalletInspector />
+        ) : ['events', 'event-study', 'news'].includes(workspace) ? (
+          <EventInspector />
+        ) : ['macro', 'economic'].includes(workspace) ? (
+          <MacroInspector />
         ) : (
           <Inspector market={market} clear={() => setSelected(null)} />
         )}

@@ -1,5 +1,12 @@
 # Blockers and verification limits
 
+- Phase 5 FRED credential is absent; adapter, observed revision storage and
+  deterministic tests are implemented, but live ingestion is unverified. No
+  sourced event records were supplied. Official-source transcription is bounded
+  and documented, without seeded fake events. TOTAL3, exact DXY and gold remain
+  unavailable. Retrospective studies do not establish causation or a release-time
+  backtest; original publication vintages/expectations are incomplete.
+
 - Phase 4 Helius credential and tracked-wallet configuration are absent. Adapter,
   persistence, explorer and deterministic tests exist; live wallet integration is
   unverified. Four requests/day rotates bounded address polling; incomplete coverage

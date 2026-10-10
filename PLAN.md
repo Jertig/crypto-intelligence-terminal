@@ -11,7 +11,16 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 4 bounded plan
+## Phase 5 bounded plan
+
+Preserve the merged architecture and prior coverage. Add bounded FRED observations
+and locally observed revisions, immutable public-source manual events, transparent
+impact windows, descriptive cross-market statistics and ivory research tables.
+Missing credentials and incomplete release/market evidence remain unavailable.
+Run the complete gate, commit coherently, push, PR and merge only latest green CI
+before Phase 6. Production deployment remains outside the authorized scope.
+
+## Completed Phase 4 plan
 
 1. Complete Phase 4 only on feat/wallet-intelligence: bounded Helius adapter,
    tracked wallets, transaction/transfer persistence and compaction, labels,

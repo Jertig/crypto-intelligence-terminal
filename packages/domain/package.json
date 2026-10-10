@@ -11,7 +11,8 @@
     "./intelligence": "./src/intelligence.ts",
     "./signals": "./src/signals.ts",
     "./token-risk": "./src/token-risk.ts",
-    "./wallets": "./src/wallets.ts"
+    "./wallets": "./src/wallets.ts",
+    "./events": "./src/events.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

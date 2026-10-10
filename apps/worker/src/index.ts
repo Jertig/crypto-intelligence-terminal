@@ -7,6 +7,7 @@ import { isHeartbeatFresh } from '@terminal/domain/health';
 import { MarketEngine } from './market-engine';
 import { TokenEngine } from './token-engine';
 import { WalletEngine } from './wallet-engine';
+import { MacroEngine } from './macro-engine';
 
 async function start() {
   const config = readEnvironment(process.env, true);
@@ -14,6 +15,7 @@ async function start() {
   const connection = createDatabase(config.DATABASE_URL);
   const instanceId = randomUUID();
   const walletEngine = new WalletEngine(connection, config);
+  const macroEngine = new MacroEngine(connection, config.FRED_API_KEY);
   const startedAt = new Date();
   let lastSuccessAt: Date | null = null;
   let stopping = false;
@@ -83,6 +85,7 @@ async function start() {
   marketEngine?.start();
   tokenEngine?.start();
   walletEngine.start();
+  macroEngine.start();
 
   async function shutdown(exitCode: number) {
     if (stopping) return;
@@ -94,6 +97,7 @@ async function start() {
       marketEngine?.stop(),
       tokenEngine?.stop(),
       walletEngine.stop(),
+      macroEngine.stop(),
     ]);
     await pending;
     await new Promise<void>((resolve) => server.close(() => resolve()));

@@ -8,7 +8,8 @@
     "./binance": "./src/binance.ts",
     "./stream": "./src/stream.ts",
     "./token-data": "./src/token-data.ts",
-    "./helius": "./src/helius.ts"
+    "./helius": "./src/helius.ts",
+    "./fred": "./src/fred.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

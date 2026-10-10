@@ -16,6 +16,62 @@ import {
 import type { Feature, Component } from '@terminal/domain/intelligence';
 import type { RiskSnapshot } from '@terminal/domain/token-risk';
 import type { WalletTransaction } from '@terminal/domain/wallets';
+import type {
+  MacroObservation,
+  ResearchEvent,
+  EventImpact,
+} from '@terminal/domain/events';
+export const macroObservations = pgTable(
+  'macro_observations',
+  {
+    seriesId: text('series_id').notNull(),
+    date: text('date').notNull(),
+    collectedAt: timestamp('collected_at', { withTimezone: true }).notNull(),
+    observation: jsonb('observation').$type<MacroObservation>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.seriesId, t.date, t.collectedAt] }),
+    index('macro_retention_idx').on(t.collectedAt),
+    check(
+      'macro_lineage_valid',
+      sql`octet_length(${t.observation}::text)<=4096 AND ${t.observation}->>'seriesId'=${t.seriesId} AND ${t.observation}->>'date'=${t.date} AND ${t.observation}->'provenance'->>'providerId'='fred' AND ${t.observation}->'provenance'->>'quality'='DIRECT'`,
+    ),
+  ],
+);
+export const researchEvents = pgTable(
+  'research_events',
+  {
+    id: text('id').primaryKey(),
+    timestamp: timestamp('timestamp', { withTimezone: true }).notNull(),
+    observation: jsonb('observation').$type<ResearchEvent>().notNull(),
+  },
+  (t) => [
+    index('event_time_idx').on(t.timestamp),
+    check(
+      'event_payload_valid',
+      sql`octet_length(${t.observation}::text)<=4096 AND ${t.observation}->>'id'=${t.id}`,
+    ),
+  ],
+);
+export const eventImpacts = pgTable(
+  'event_impacts',
+  {
+    eventId: text('event_id')
+      .notNull()
+      .references(() => researchEvents.id),
+    asset: text('asset').notNull(),
+    windowMinutes: integer('window_minutes').notNull(),
+    calculatedAt: timestamp('calculated_at', { withTimezone: true }).notNull(),
+    observation: jsonb('observation').$type<EventImpact>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.eventId, t.asset, t.windowMinutes] }),
+    check(
+      'event_impact_valid',
+      sql`${t.asset} IN ('BTC','ETH','SOL') AND ${t.windowMinutes} IN (5,60,240,1440) AND octet_length(${t.observation}::text)<=4096`,
+    ),
+  ],
+);
 export const walletProviderBudget = pgTable(
   'wallet_provider_budget',
   { day: text('day').primaryKey(), requests: integer('requests').notNull() },
