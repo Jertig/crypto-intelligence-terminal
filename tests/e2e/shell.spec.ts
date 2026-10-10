@@ -130,7 +130,9 @@ test('data status handles a loading response and absent configuration', async ({
     await route.continue();
   });
   await page.goto('/data-status');
-  await expect(page.getByRole('status')).toHaveText('Checking runtime health…');
+  await expect(page.locator('.system-health').getByRole('status')).toHaveText(
+    'Checking runtime health…',
+  );
   release?.();
   await expect(page.locator('.system-health')).toContainText('NOT CONFIGURED');
   await expect(page.locator('.provider-table tbody tr')).toHaveCount(7);

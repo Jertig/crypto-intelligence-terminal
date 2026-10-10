@@ -1,6 +1,6 @@
 # Project status
 
-Phases 0–6 completed and merged after green CI:
+Phases 0–8 implemented. Phases 0–7 merged after green CI:
 
 - Phase 0: PR #1, d955dde.
 - Phase 1: PR #2, 8a32384.
@@ -9,6 +9,7 @@ Phases 0–6 completed and merged after green CI:
 - Phase 4: PR #5, 0f3823e; all fourteen latest checks passed on 8d9e718.
 - Phase 5: PR #6, 2e353a1; all fourteen latest checks passed on 1af11cb.
 - Phase 6: PR #7, ef9d092; all fourteen latest checks passed on f96de81.
+- Phase 7: PR #8, fb279f1; all fourteen latest checks passed on 88b4000.
 
 Phase 3 final gate: 75 unit, 32 PostgreSQL integration, 19 browser tests;
 production containers, graceful shutdown/recovery, data-quality, security,
@@ -41,15 +42,26 @@ review. No new table/migration/service. See docs/qa/phase-6.md. Merged with exac
 head green CI. Live model credentials are absent; no paid or automatic
 model request was performed.
 
-Active: Phase 7, feat/research-workflow. Persistent bounded watchlists, notes,
+Completed Phase 7. Persistent bounded watchlists, notes,
 saved queries/views, immutable evidence reports and deterministic in-app alerts.
 Eight additive typed tables, eleven migrations total, same four runtime services.
 Local full QA passed: 139 unit, 70 PostgreSQL integration, 35 browser tests,
 strict checks, production/container builds, graceful shutdown/recovery, security,
-resource and desktop/mobile visual review. See docs/qa/phase-7.md. Publishing and
-latest-head CI/merge remain pending.
+resource and desktop/mobile visual review. See docs/qa/phase-7.md. The resumed
+gate fixed order-dependent fixture cleanup without weakening any assertion.
+Merged after exact-head green CI, preserving history.
+
+Completed Phase 8 implementation: production Compose/HTTPS, restricted roles,
+protected storage monitoring, credential-independent maintenance, bounded
+backups/systemd timer and disposable restore verification. Full local gate passed:
+156 unit, 73 PostgreSQL integration, 37 browser and 49 secured operational checks.
+Four hardened images, 12 migrations, 37 tables; desktop/mobile review, security,
+resource/storage-growth audit and portfolio documentation are complete.
+See docs/qa/phase-8.md and docs/resource-review.md. Exact-head green CI is required
+before merging chore/production-hardening; live publication/check state is recorded
+on GitHub. The release workflow includes a final repository-wide gate from main.
 
 Helius credential and tracked-wallet list are absent. No fake live activity;
 fixtures validate deterministic behavior. Live Binance spot/DEX/GoPlus continue;
-futures remains unavailable. No VPS deployment performed. Phases 7–8 follow
-sequentially after the active phase passes and merges.
+futures remains unavailable. No VPS deployment performed. Optional credentials,
+public domain/host access and off-host backup configuration remain unverified.

@@ -1,14 +1,85 @@
 # Deployment
 
-No VPS deployment is authorized or performed in Phase 0. The Compose and Caddy
-configuration is for local validation only, with HTTP bound to loopback. Public
-HTTPS, authentication, backups, retention automation, swap policy, monitoring,
-and disaster recovery belong to production hardening.
+Production hardening is prepared and locally verified separately from deployment.
+No VPS deployment has been authorized or performed. `compose.yaml` remains the
+loopback development preview; `compose.production.yaml` provides secured HTTPS,
+restricted roles, storage protection and prebuilt images. Read the
+[operations/security model](production-operations.md) and
+[recovery workflow](disaster-recovery.md) before go-live.
 
 Target: Ubuntu, two vCPU, 2 GB RAM, 40 GB disk. Runtime services: `web`, `worker`,
 `postgres`, and `caddy`. The database must remain internal. Runtime builds should
 be prepared on a capable workstation or CI rather than assumed feasible on this
 small VPS.
+
+## Production preparation
+
+Use Ubuntu with Docker Engine/Compose >=2.24.4, Node 24 and Git for host operations and a
+dedicated trusted operator account. Secure SSH/firewall and configure bounded
+journald. Publish only TCP 80/443 through Caddy; do not expose PostgreSQL or bind
+the development database override publicly. Domain DNS must point to the target
+before public automatic HTTPS can work. A 1 GiB emergency swap file may soften
+transient pressure; it is not usable application capacity or a substitute for caps.
+
+Verify NTP/time synchronization on the host and compare provider clocks before
+go-live. Future source timestamps are withheld from eligible analysis and labeled
+stale; they must never be clamped to local collection time to manufacture freshness.
+
+Build images on a workstation/CI, inspect their immutable IDs, and transfer a
+verified `docker save` archive or use digest-pinned registry images. Load the
+archive on the VPS. Do not build or accumulate build caches there. Keep a previous
+release for rollback; remove only operator-reviewed obsolete project images.
+Pinned base-image updates need dependency, container and recovery QA.
+
+Copy `.env.example` to ignored `.env.production`, chmod 0600, and fill:
+POSTGRES_PASSWORD, POSTGRES_WEB_PASSWORD and POSTGRES_WORKER_PASSWORD (distinct
+32–128-character URL-safe random values); WEB_IMAGE, WORKER_IMAGE, POSTGRES_IMAGE and CADDY_IMAGE (immutable
+sha256 IDs or registry digests); APP_ORIGIN (exact https://domain); ACCESS_USER;
+ACCESS_HASH (bcrypt cost 12–14). Generate the gateway hash with `caddy hash-password`
+using stdin, not a command-line plaintext password. Quote the hash value in the
+environment file to preserve its dollar signs. Optional provider keys stay blank
+when absent; AI remains disabled without explicit enablement/key/model. No runtime
+service receives the entire environment file.
+
+```sh
+node infra/ops/terminal.mjs validate
+node infra/ops/terminal.mjs initialize
+node infra/ops/terminal.mjs start
+node infra/ops/terminal.mjs status
+node infra/ops/terminal.mjs backup
+node infra/ops/terminal.mjs verify-restore
+```
+
+Initialize starts PostgreSQL, runs administrator migrations in a one-off worker
+container, then reapplies limited runtime grants. The permanent worker runs only
+its runtime process. Repeat initialize before starting a new schema release;
+never run backward migrations or rewrite migration history. Review a backup and
+forward-schema compatibility before rolling images back.
+
+Install the supplied backup timer only after adjusting its directory/user and
+testing the commands as that account. Configure off-host transfer and verify a
+clean-host restore. Public TLS, firewall, actual VPS resource behavior and remote
+recovery remain go-live checks requiring the operator's domain/host/access details.
+
+## Isolated production-like QA
+
+```sh
+docker compose build worker
+docker compose build web
+docker compose build postgres
+docker compose build caddy
+node infra/ops/verify-production.mjs
+```
+
+This creates/reuses only `terminal-production-qa`, separate from development data,
+with generated ignored credentials and HTTPS on localhost:18443. The explicit QA
+override publishes loopback ports only and uses Caddy's internal CA. The test client
+accepts only this known local certificate; production clients use normal trusted
+public TLS. It tests authentication, Origin rules, database permissions, synthetic
+storage-protection states (test-only), persistent operator procedures, frozen
+unavailable-evidence reports, shutdown/outage/recovery and a real dump/restore.
+Live ingestion/model calls are disabled. Result: `.work/production-verification.json`.
+No persistent volume is removed. Do not use this override for public deployment.
 
 ## Local PostgreSQL
 
@@ -36,6 +107,8 @@ database URI. Schema changes must be committed as SQL and Drizzle metadata.
 ```sh
 docker compose build worker
 docker compose build web
+docker compose build postgres
+docker compose build caddy
 docker compose up -d --wait
 ```
 
