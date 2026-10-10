@@ -8,19 +8,19 @@ worker, queue, cache, analytics database or monitoring server was introduced.
 ## Isolated secured production gate
 
 The final operational verifier used no market/provider/model credentials or live
-ingestion. All 49 checks passed, including a real dump/disposable restore. Startup
-took 24.91 seconds; worker shutdown took 0.69 seconds, exit zero, no OOM. Twelve
+ingestion. All 50 checks passed, including a real dump/disposable restore. Startup
+took 25.16 seconds; worker shutdown took 0.67 seconds, exit zero, no OOM. Twelve
 warm serial authenticated API samples across health, markets, research and
-operations took 6–60 ms. These are observations, not percentile/SLA claims.
+operations took 7–55 ms. These are observations, not percentile/SLA claims.
 
 | Service    | Observed idle sample | Memory cap | CPU cap   |
 | ---------- | -------------------- | ---------- | --------- |
-| Caddy      | 15.54 MiB            | 100 MiB    | 0.25 core |
-| PostgreSQL | 43.21 MiB            | 500 MiB    | 0.75 core |
-| Web        | 51.32 MiB            | 400 MiB    | 0.50 core |
-| Worker     | 29.90 MiB            | 300 MiB    | 0.50 core |
+| Caddy      | 13.25 MiB            | 100 MiB    | 0.25 core |
+| PostgreSQL | 38.84 MiB            | 500 MiB    | 0.75 core |
+| Web        | 50.34 MiB            | 400 MiB    | 0.50 core |
+| Worker     | 28.78 MiB            | 300 MiB    | 0.50 core |
 
-Total sample: 139.97 MiB; aggregate cap: 1,300 MiB. Approximately 748 MiB remains
+Total sample: 131.21 MiB; aggregate cap: 1,300 MiB. Approximately 748 MiB remains
 on a 2 GiB machine for its OS/Docker. Connection/work/V8/temp limits are documented
 in [operations](production-operations.md). Short idle samples do not prove absence
 of long-term growth or sufficient headroom under all optional providers.
@@ -70,7 +70,7 @@ QA, reflecting the workstation's existing disk use, not project database growth.
 Protection tests inject only a labeled operational-state fixture and restore real
 measurements afterward; no disk-filling or unrelated cleanup was performed.
 
-The verified isolated dump was 77,435 bytes and restored twelve migrations, two
+The verified isolated dump was 77,648 bytes and restored twelve migrations, two
 reports, one note and one watchlist. Small fixture-free QA archives do not establish
 production backup size. Seven daily/four weekly/three monthly buckets overlap and
 must fit the archive budget. Independent off-host transfer and clean-host recovery

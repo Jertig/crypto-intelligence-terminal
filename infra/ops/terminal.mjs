@@ -21,8 +21,9 @@ import { fileURLToPath } from 'node:url';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const directory = join(root, 'data', 'operations'),
-  archives = join(directory, 'backups');
+export function operationDirectory(qa = false) {
+  return join(root, 'data', qa ? 'operations-qa' : 'operations');
+}
 const budget = 8 * 1024 ** 3;
 const archivePattern = /^terminal-\d{4}-\d{2}-\d{2}T\d{6}Z\.dump$/;
 export function retainedBackups(names) {
@@ -194,12 +195,14 @@ async function digest(path) {
   for await (const b of createReadStream(path)) h.update(b);
   return h.digest('hex');
 }
-async function publishStatus(status) {
+async function publishStatus(directory, status) {
   const temp = join(directory, 'backup-status.tmp');
   await writeFile(temp, JSON.stringify(status) + '\n', { mode: 0o644 });
   await rename(temp, join(directory, 'backup-status.json'));
 }
 async function backup(ctx) {
+  const directory = operationDirectory(ctx.qa),
+    archives = join(directory, 'backups');
   await mkdir(archives, { recursive: true, mode: 0o700 });
   within(await realpath(archives));
   const lock = join(directory, 'backup.lock'),
@@ -303,7 +306,7 @@ async function backup(ctx) {
     await rename(temp, path);
     temp = undefined;
     await writeFile(path + '.sha256', hash + '\n', { mode: 0o600 });
-    await publishStatus({
+    await publishStatus(directory, {
       lastSuccessAt: date.toISOString(),
       bytes,
       digest: hash,
@@ -327,7 +330,7 @@ async function backup(ctx) {
       }),
     );
   } catch (e) {
-    await publishStatus({
+    await publishStatus(directory, {
       ...previous,
       error:
         e.message === 'BUDGET_EXHAUSTED' ? 'BUDGET_EXHAUSTED' : 'BACKUP_FAILED',
@@ -343,6 +346,8 @@ async function backup(ctx) {
   }
 }
 async function verifyRestore(ctx) {
+  const directory = operationDirectory(ctx.qa),
+    archives = join(directory, 'backups');
   within(await realpath(archives));
   const names = (await readdir(archives))
       .filter((n) => archivePattern.test(n))
@@ -442,7 +447,7 @@ export async function main(args = process.argv.slice(2)) {
     console.log('Production configuration valid; secret values omitted.');
     return;
   }
-  await mkdir(directory, { recursive: true, mode: 0o755 });
+  await mkdir(operationDirectory(ctx.qa), { recursive: true, mode: 0o755 });
   if (command === 'initialize') {
     await run(ctx, ['up', '-d', 'postgres', '--wait']);
     const url = `postgresql://terminal_admin:${ctx.c.POSTGRES_PASSWORD}@postgres:5432/terminal`;

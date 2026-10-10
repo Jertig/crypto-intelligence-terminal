@@ -1,4 +1,5 @@
 export function retainedBackups(names: string[]): string[];
+export function operationDirectory(qa?: boolean): string;
 export function validateProduction(
   config: Record<string, string>,
   qa?: boolean,

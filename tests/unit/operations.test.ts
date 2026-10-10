@@ -10,6 +10,7 @@ import { readEnvironment } from '../../packages/domain/src/environment';
 import { sameOriginRequest } from '../../packages/domain/src/request-security';
 import {
   retainedBackups,
+  operationDirectory,
   validateProduction,
 } from '../../infra/ops/terminal.mjs';
 const now = new Date('2026-09-02T12:00:00Z');
@@ -41,6 +42,15 @@ const config: Record<string, string> = {
   CADDY_IMAGE: 'sha256:' + 'd'.repeat(64),
 };
 describe('bounded production operations', () => {
+  it('isolates QA backup, lock and status files from production operations', () => {
+    expect(operationDirectory(true)).not.toBe(operationDirectory(false));
+    expect(operationDirectory(true).replaceAll('\\', '/')).toMatch(
+      /\/data\/operations-qa$/,
+    );
+    expect(operationDirectory(false).replaceAll('\\', '/')).toMatch(
+      /\/data\/operations$/,
+    );
+  });
   it.each([
     [0, 'NORMAL'],
     [69, 'NORMAL'],

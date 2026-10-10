@@ -10,7 +10,7 @@ on the exact pushed head; the final repository-wide audit runs again from main.
 
 All seventeen sections of 05_TESTING_QA_PROMPT.md reviewed. Frozen dependency
 installation, formatting, lint, strict workspace/test types, migration consistency,
-156 deterministic unit, 73 real PostgreSQL integration and 37 production-browser
+157 deterministic unit, 73 real PostgreSQL integration and 37 production-browser
 tests passed. Original assertions, coverage and deadlines remain intact. Fresh
 worker/web production builds and all four hardened container builds passed.
 Twelve additive migrations, 37 public tables and four runtime services.
@@ -23,7 +23,7 @@ storage thresholds, missing/invalid/future/stale measurements, bounded backup
 selection, pinned configuration, pause/resume, failed status persistence and
 production research write protection. Missing data is never replaced by zero.
 
-The final isolated secured production verifier passed 49 checks: homepage,
+The final isolated secured production verifier passed 50 checks: homepage,
 health, every data API and real static assets reject unauthenticated access;
 authenticated HTTPS/readiness/security headers and HTTP redirects work. Foreign
 origins fail. Runtime roles cannot assume administrator, create schema or modify
@@ -31,17 +31,17 @@ forbidden evidence/records. A labeled synthetic operational-state fixture blocks
 writes while preserving reads, then real status is restored. Unit-injected
 measurements verify worker pause/resume; no real disk was filled to trigger it.
 
-Worker shutdown took 0.69 seconds, exit zero, no OOM; its own heartbeat was removed.
+Worker shutdown took 0.67 seconds, exit zero, no OOM; its own heartbeat was removed.
 Readiness failed while stopped and during database outage, without internal error
 details. Restart preserved notes/watchlists, twelve migrations and report digests.
-A real 77,435-byte custom-format dump restored to a disposable database, preserving
+A real 77,648-byte custom-format dump restored to a disposable database, preserving
 twelve migrations, two reports, one note and one watchlist. Only the test database
 created by that operation was dropped; existing data/volumes were preserved.
 
 All four services were healthy with bounded memory/CPU/logs/restarts. Only Caddy
 published loopback QA ports; production publishes only TCP 80/443. Node application
 containers were non-root/read-only. Twelve warm serial API observations took
-6–60 ms. Idle production-like service RAM totaled 139.97 MiB. See
+7–55 ms. Idle production-like service RAM totaled 131.21 MiB. See
 [measurement scope and growth analysis](../resource-review.md).
 
 Browser regression coverage preserves keyboard navigation, scanner sort/filter,
@@ -132,6 +132,7 @@ panel, neon/glass styling or decorative network graph was added.
 
 ## Fixed during review
 
+- Isolated QA backup/status/lock directories and PostgreSQL volumes from production; added regression checks preventing archive/status crossover.
 - Quoted production tmpfs options so YAML does not split comma-separated flags.
 - Corrected test module mocks to use the actual shared module path; failures remain tested.
 - Scoped the existing runtime loader assertion after adding a second accessible status panel.

@@ -72,7 +72,9 @@ node infra/ops/verify-production.mjs
 ```
 
 This creates/reuses only `terminal-production-qa`, separate from development data,
-with generated ignored credentials and HTTPS on localhost:18443. The explicit QA
+with generated ignored credentials and HTTPS on localhost:18443. QA operations,
+archives and locks use `data/operations-qa`; production uses `data/operations`.
+The override also binds only the separate QA PostgreSQL volume. The explicit QA
 override publishes loopback ports only and uses Caddy's internal CA. The test client
 accepts only this known local certificate; production clients use normal trusted
 public TLS. It tests authentication, Origin rules, database permissions, synthetic

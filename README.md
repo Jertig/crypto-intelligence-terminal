@@ -128,8 +128,8 @@ and [Phase 2 review](docs/qa/phase-2.md), followed by [Phase 3](docs/qa/phase-3.
 and [Phase 4](docs/qa/phase-4.md), followed by [Phase 5](docs/qa/phase-5.md)
 and [Phase 6](docs/qa/phase-6.md), followed by [Phase 7](docs/qa/phase-7.md),
 and [Phase 8](docs/qa/phase-8.md), record results and scope limitations.
-The final local gate passes 156 unit, 73 PostgreSQL integration, 37 browser and
-49 secured container/backup/recovery checks.
+The final local gate passes 157 unit, 73 PostgreSQL integration, 37 browser and
+50 secured container/backup/recovery checks.
 Production dependency audit is clean. One upstream development-tool advisory is
 locally mitigated and documented in [dependency security](docs/dependency-security.md).
 

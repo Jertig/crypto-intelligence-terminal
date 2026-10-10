@@ -433,7 +433,7 @@ async function run() {
   command('backup');
   command('verify-restore');
   evidence.restore = JSON.parse(
-    await readFile('data/operations/restore-verification.json', 'utf8'),
+    await readFile('data/operations-qa/restore-verification.json', 'utf8'),
   );
   check(
     'Real dump restores all migrations and research records',
@@ -465,6 +465,25 @@ async function run() {
           )
         : Object.keys(c.HostConfig.PortBindings ?? {}).length === 0,
     ),
+  );
+  const qaWorker = containers.find(
+    (c) => c.Config.Labels['com.docker.compose.service'] === 'worker',
+  );
+  const qaPostgres = containers.find(
+    (c) => c.Config.Labels['com.docker.compose.service'] === 'postgres',
+  );
+  check(
+    'QA database volume and operational directory are isolated',
+    qaWorker.Mounts.some(
+      (m) =>
+        m.Destination === '/operations' &&
+        m.Source.replaceAll('\\', '/').endsWith('/data/operations-qa'),
+    ) &&
+      qaPostgres.Mounts.some(
+        (m) =>
+          m.Destination === '/var/lib/postgresql/data' &&
+          m.Name === 'terminal-production-qa_postgres-data',
+      ),
   );
   check(
     'Bounded memory, CPU, restart and logs',

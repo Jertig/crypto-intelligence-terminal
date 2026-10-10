@@ -119,6 +119,11 @@ directory/user to the secured checkout, and enable the timer. The timer runs dai
 at 02:30 UTC with a short jitter and bounded execution. Its status must be checked;
 no timer has been installed on the user's VPS by this work.
 
+QA backups/status/locks are isolated under `data/operations-qa`; production uses
+`data/operations`. The isolated verifier never prunes production archives or
+publishes QA success into production status. Its worker uses the separate QA
+database volume and operations bind mount, both verified in the container gate.
+
 ## Monitoring and response
 
 Authenticated `/health` separates liveness from DB/worker status;

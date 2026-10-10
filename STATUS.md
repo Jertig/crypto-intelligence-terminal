@@ -54,7 +54,7 @@ Merged after exact-head green CI, preserving history.
 Completed Phase 8 implementation: production Compose/HTTPS, restricted roles,
 protected storage monitoring, credential-independent maintenance, bounded
 backups/systemd timer and disposable restore verification. Full local gate passed:
-156 unit, 73 PostgreSQL integration, 37 browser and 49 secured operational checks.
+157 unit, 73 PostgreSQL integration, 37 browser and 50 secured operational checks.
 Four hardened images, 12 migrations, 37 tables; desktop/mobile review, security,
 resource/storage-growth audit and portfolio documentation are complete.
 See docs/qa/phase-8.md and docs/resource-review.md. Exact-head green CI is required
