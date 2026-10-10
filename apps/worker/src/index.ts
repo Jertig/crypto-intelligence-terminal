@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { createDatabase } from '@terminal/db';
-import { removeHeartbeat, saveHeartbeat } from '@terminal/db/heartbeat';
+import { saveHeartbeat } from '@terminal/db/heartbeat';
+import { drainWorkerDatabase } from './shutdown';
 import { readEnvironment } from '@terminal/domain/environment';
 import { isHeartbeatFresh } from '@terminal/domain/health';
 import { MarketEngine } from './market-engine';
@@ -93,25 +94,20 @@ async function start() {
     clearTimeout(timer);
     const deadline = setTimeout(() => process.exit(1), 8000);
     deadline.unref();
-    await Promise.all([
-      marketEngine?.stop(),
-      tokenEngine?.stop(),
+    const httpClosed = new Promise<void>((resolve) =>
+      server.close(() => resolve()),
+    );
+    server.closeAllConnections();
+    await drainWorkerDatabase(connection, config.DATABASE_URL!, instanceId, [
+      ...(marketEngine ? [marketEngine.stop()] : []),
+      ...(tokenEngine ? [tokenEngine.stop()] : []),
       walletEngine.stop(),
       macroEngine.stop(),
     ]);
     await pending;
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-    try {
-      await removeHeartbeat(connection, instanceId);
-    } catch {
-      console.error(
-        'Worker shutdown: heartbeat cleanup unavailable. It will age out.',
-      );
-    } finally {
-      await connection.client.end({ timeout: 3 });
-      clearTimeout(deadline);
-      process.exitCode = exitCode;
-    }
+    await httpClosed;
+    clearTimeout(deadline);
+    process.exitCode = exitCode;
   }
 
   process.once('SIGTERM', () => {

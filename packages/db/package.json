@@ -11,7 +11,8 @@
     "./intelligence": "./src/intelligence.ts",
     "./tokens": "./src/tokens.ts",
     "./wallets": "./src/wallets.ts",
-    "./events": "./src/events.ts"
+    "./events": "./src/events.ts",
+    "./analyst": "./src/analyst.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
