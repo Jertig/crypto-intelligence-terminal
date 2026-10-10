@@ -97,6 +97,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
       - name: Set ephemeral database password
         shell: bash
         run: |
@@ -104,13 +107,25 @@ jobs:
           echo "::add-mask::$password"
           printf 'POSTGRES_PASSWORD=%s\nMARKET_INGESTION_ENABLED=false\n' "$password" > .env
       - run: docker compose config --quiet
-      - run: docker compose build worker && docker compose build web
+      - run: docker compose build worker && docker compose build web && docker compose build postgres && docker compose build caddy
       - run: docker compose up -d --wait --wait-timeout 120
       - name: Verify application readiness
         run: |
           curl --fail --silent http://127.0.0.1:8080/health?ready=1
           test "$(docker inspect "$(docker compose ps -q postgres)" --format '{{len .HostConfig.PortBindings}}')" = '0'
+      - run: docker compose down
+      - name: Verify isolated HTTPS, roles, protection, persistence and backup restore
+        run: node infra/ops/verify-production.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: production-operations-verification
+          path: .work/production-verification.json
+          include-hidden-files: true
+          retention-days: 7
       - if: failure()
         run: docker compose logs --no-color --tail 100
       - if: always()
         run: docker compose down
+      - if: always()
+        run: docker compose --env-file .work/production-qa.env -f compose.production.yaml -f infra/docker/compose.production-qa.yaml -p terminal-production-qa down

@@ -1,0 +1,145 @@
+name: terminal-production
+x-logging: &logging
+  driver: json-file
+  options: { max-size: 10m, max-file: '3' }
+x-node: &node
+  restart: unless-stopped
+  read_only: true
+  tmpfs: ['/tmp:size=16m,mode=1777']
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  logging: *logging
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?Use a prebuilt hardened PostgreSQL image}
+    environment:
+      POSTGRES_DB: terminal
+      POSTGRES_USER: terminal_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Administrator password required}
+      POSTGRES_WEB_PASSWORD: ${POSTGRES_WEB_PASSWORD:?Web role password required}
+      POSTGRES_WORKER_PASSWORD: ${POSTGRES_WORKER_PASSWORD:?Worker role password required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/docker/init-roles.sh:/docker-entrypoint-initdb.d/10-roles.sh:ro
+    command:
+      [
+        postgres,
+        -c,
+        shared_buffers=128MB,
+        -c,
+        max_connections=20,
+        -c,
+        work_mem=4MB,
+        -c,
+        maintenance_work_mem=64MB,
+        -c,
+        temp_file_limit=131072,
+        -c,
+        max_wal_size=512MB,
+        -c,
+        idle_in_transaction_session_timeout=10s,
+      ]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U terminal_admin -d terminal]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    mem_limit: 500m
+    cpus: 0.75
+    logging: *logging
+  worker:
+    <<: *node
+    image: ${WORKER_IMAGE:?Use a prebuilt worker image}
+    command: [node, dist/index.mjs]
+    environment:
+      DATABASE_URL: postgresql://terminal_worker:${POSTGRES_WORKER_PASSWORD}@postgres:5432/terminal
+      WORKER_PORT: 3001
+      NODE_OPTIONS: --max-old-space-size=160
+      STORAGE_GUARD_ENABLED: 'true'
+      MARKET_INGESTION_ENABLED: ${MARKET_INGESTION_ENABLED:-true}
+      MARKET_SYMBOLS: ${MARKET_SYMBOLS:-}
+      TOKEN_INGESTION_ENABLED: ${TOKEN_INGESTION_ENABLED:-}
+      TOKEN_UNIVERSE: ${TOKEN_UNIVERSE:-}
+      GOPLUS_ENABLED: ${GOPLUS_ENABLED:-}
+      GOPLUS_API_KEY: ${GOPLUS_API_KEY:-}
+      HELIUS_API_KEY: ${HELIUS_API_KEY:-}
+      TRACKED_WALLETS: ${TRACKED_WALLETS:-}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+    volumes:
+      - postgres-data:/capacity:ro
+      - ./data/operations:/operations:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3001/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    stop_grace_period: 10s
+    init: true
+    mem_limit: 300m
+    cpus: 0.5
+  web:
+    <<: *node
+    image: ${WEB_IMAGE:?Use a prebuilt web image}
+    environment:
+      DATABASE_URL: postgresql://terminal_web:${POSTGRES_WEB_PASSWORD}@postgres:5432/terminal
+      APP_ORIGIN: ${APP_ORIGIN:?Exact HTTPS origin required}
+      NODE_OPTIONS: --max-old-space-size=256
+      STORAGE_GUARD_ENABLED: 'true'
+      AI_ANALYST_ENABLED: ${AI_ANALYST_ENABLED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+      worker: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3000/health?ready=1').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 400m
+    cpus: 0.5
+  caddy:
+    image: ${CADDY_IMAGE:?Use a prebuilt hardened Caddy image}
+    environment:
+      APP_ORIGIN: ${APP_ORIGIN}
+      ACCESS_USER: ${ACCESS_USER:?Operator user required}
+      ACCESS_HASH: ${ACCESS_HASH:?Bcrypt hash required}
+      TLS_PROFILE: public_tls
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./infra/caddy/Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web: { condition: service_healthy }
+    healthcheck:
+      test:
+        [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:8081/health?ready=1']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 100m
+    cpus: 0.25
+    logging: *logging
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

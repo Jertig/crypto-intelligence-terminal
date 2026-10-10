@@ -1,6 +1,9 @@
 .git
 .env
 .env.*
+**/.env
+**/.env.*
+.work
 **/node_modules
 **/.next
 **/dist

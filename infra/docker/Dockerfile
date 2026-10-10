@@ -1,4 +1,4 @@
-FROM node:24-alpine AS dependencies
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS dependencies
 WORKDIR /workspace
 RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -19,7 +19,8 @@ FROM dependencies AS worker-build
 COPY . .
 RUN pnpm --filter @terminal/worker build
 
-FROM node:24-alpine AS web
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS web
+RUN apk add --no-cache zlib=1.3.2-r1 && rm -rf /usr/local/lib/node_modules /opt/yarn* && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=web-build --chown=node:node /workspace/apps/web/.next/standalone ./
@@ -28,7 +29,8 @@ USER node
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
 
-FROM node:24-alpine AS worker
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS worker
+RUN apk add --no-cache zlib=1.3.2-r1 && rm -rf /usr/local/lib/node_modules /opt/yarn* && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=worker-build --chown=node:node /workspace/apps/worker/dist ./dist

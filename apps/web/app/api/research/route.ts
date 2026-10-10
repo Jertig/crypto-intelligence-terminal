@@ -3,6 +3,7 @@ import { sameOriginRequest } from '@terminal/domain/request-security';
 import { mutateResearch, queryResearch } from '@terminal/db/research';
 import { boundedJson } from '@terminal/providers';
 import { configuredDatabase } from '../../../lib/database';
+import { researchWritesAllowed } from '@terminal/db/operations';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store' };
 let busy = false,
@@ -24,7 +25,7 @@ export async function GET() {
 }
 export async function POST(request: Request) {
   if (
-    !sameOriginRequest(request) ||
+    !sameOriginRequest(request, process.env.APP_ORIGIN) ||
     request.headers.get('content-type')?.split(';')[0] !== 'application/json'
   )
     return Response.json(
@@ -64,6 +65,16 @@ export async function POST(request: Request) {
   try {
     const c = configuredDatabase();
     if (!c) throw new Error('DATABASE_UNAVAILABLE');
+    if (
+      !(await researchWritesAllowed(
+        c,
+        process.env.STORAGE_GUARD_ENABLED === 'true',
+      ))
+    )
+      return Response.json(
+        { error: 'STORAGE_PROTECTED' },
+        { status: 503, headers },
+      );
     return Response.json(await mutateResearch(c, action), { headers });
   } catch (e) {
     const code = e instanceof Error ? e.message : '';

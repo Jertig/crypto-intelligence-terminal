@@ -16,7 +16,7 @@ let busy = false,
 export async function POST(request: Request) {
   const headers = { 'Cache-Control': 'no-store' };
   if (
-    !sameOriginRequest(request) ||
+    !sameOriginRequest(request, process.env.APP_ORIGIN) ||
     request.headers.get('content-type')?.split(';')[0] !== 'application/json'
   )
     return Response.json(
