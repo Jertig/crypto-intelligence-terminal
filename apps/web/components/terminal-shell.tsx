@@ -10,6 +10,12 @@ import {
 } from './market-workspace';
 import type { MarketRow } from '@terminal/domain/market';
 import { useMarketSelection } from './query-provider';
+import {
+  NarrativeWorkspace,
+  IntelligenceSummary,
+  DerivedEvidence,
+  RegimeSummary,
+} from './narrative-workspace';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -291,44 +297,11 @@ function Dashboard({
       </div>
       <div className="research-grid">
         <MarketScanner selected={selected} onSelect={onSelect} />
-        <Panel title="Sector performance" detail="7D" className="sector">
-          <Empty title="No sector observations" icon="layers">
-            Sector returns require normalized assets and market history.
-          </Empty>
-          <div className="breadth">
-            <h3>Market breadth</h3>
-            <span>
-              Up <b>—</b>
-            </span>
-            <span>
-              Down <b>—</b>
-            </span>
-            <span>
-              Flat <b>—</b>
-            </span>
-            <p>Coverage unavailable</p>
-          </div>
+        <Panel title="Narrative coverage" detail="V1" className="sector">
+          <IntelligenceSummary />
         </Panel>
-        <Panel
-          title="Narrative rotation"
-          detail="METHODOLOGY PENDING"
-          className="rotation"
-        >
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Narrative</th>
-                  <th>Return</th>
-                  <th>Capital flow</th>
-                  <th>Stage</th>
-                </tr>
-              </thead>
-            </table>
-          </div>
-          <Empty title="No rotation evidence" icon="layers">
-            Scores will expose their inputs and methodology version.
-          </Empty>
+        <Panel title="Market regime" detail="V1 · DERIVED" className="rotation">
+          <RegimeSummary />
         </Panel>
         <PriceHistory market={market} />
         <Panel
@@ -618,7 +591,7 @@ function Inspector({
               : 'No market observations are available.'}
           </p>
           <h3>Derived signals</h3>
-          <p>Awaiting validated inputs and versioned calculations.</p>
+          <DerivedEvidence marketId={market?.id} />
           <h3>Interpretation</h3>
           <p>Analysis is unavailable until verified evidence is connected.</p>
           <h3>Counter-evidence</h3>
@@ -774,7 +747,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Market core · Phase 1
+            Narrative intelligence · Phase 2
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -803,6 +776,8 @@ export function TerminalShell({
               <MarketScanner selected={selected} onSelect={setSelected} />
               <PriceHistory market={market} />
             </>
+          ) : workspace === 'narratives' ? (
+            <NarrativeWorkspace />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (

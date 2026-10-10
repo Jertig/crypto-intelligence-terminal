@@ -13,13 +13,15 @@ External sources (Binance active; other adapters in subsequent phases)
 The repository contains `apps/web`, `apps/worker`, `packages/domain`,
 `packages/db`, and `packages/providers`. Phase 1 adds Binance normalization,
 bounded streaming, snapshots, OHLCV, funding/OI persistence and query APIs.
-Indicators, signals, narratives, wallets, events and AI tools remain subsequent
-phase boundaries. Web requests read PostgreSQL; they never fan out to providers.
+Phase 2 adds pure feature, narrative and signal engines in the domain package,
+typed wide snapshots, bounded schedules and a database-only intelligence API.
+Wallets, events, risk and AI remain subsequent phase boundaries.
+Web requests read PostgreSQL; they never fan out to providers.
 
 The web shell can render with no database or provider configured. A liveness check
 must distinguish a running web process from database readiness. The worker must
-validate configuration, connect to the database, and stop gracefully; no market
-ingestion uses one combined connection and bounded REST schedules.
+validate configuration, connect to the database, and stop gracefully. Market
+ingestion uses one combined stream and bounded REST schedules.
 
 Decisions: pnpm workspaces, strict TypeScript, PostgreSQL migrations via Drizzle,
 Zod validation, server-side credentials, bounded connection pools, and a single

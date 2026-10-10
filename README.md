@@ -3,12 +3,15 @@
 An evidence-first crypto research workstation for market structure, narratives,
 wallets, events, macro, and risk.
 
-![Ivory market core with timestamped local observations](design/phase1-market-core.png)
+![Ivory narrative research with component coverage](design/phase2-narratives.png)
 
 The market core provides a bounded Binance spot stream, persisted closed candles,
 a sortable scanner, asset inspection, provenance, price charts, and independent
 funding/open-interest adapters. Provider failures and stale observations remain
-visible. Research intelligence is being implemented in subsequent phases.
+visible. The narrative matrix exposes curated membership, partial coverage,
+component weights and counter-evidence. The asset inspector explains fourteen
+versioned derived features. Breadth and regime require sufficient evidence.
+[Methodologies](docs/methodologies.md) documents formulas and limits.
 The approved reference is a design direction; its illustrative values are never
 used as market data.
 
@@ -69,7 +72,8 @@ They reset only that guarded test database. Browser tests launch the production
 server and exercise navigation, keyboard controls, empty/error states, and layouts.
 
 GitHub Actions runs these checks plus a fresh Docker build and readiness test.
-The [Phase 0 QA report](docs/qa-report.md) and [Phase 1 review](docs/qa/phase-1.md)
+The [Phase 0 QA report](docs/qa-report.md), [Phase 1 review](docs/qa/phase-1.md)
+and [Phase 2 review](docs/qa/phase-2.md)
 record results and scope limitations.
 Production dependency audit is clean. One upstream development-tool advisory is
 locally mitigated and documented in [dependency security](docs/dependency-security.md).
