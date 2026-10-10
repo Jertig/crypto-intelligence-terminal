@@ -14,6 +14,15 @@ const WalletSelection = createContext<{
   selectedWallet: string | null;
   setSelectedWallet: (id: string | null) => void;
 } | null>(null);
+const EventSelection = createContext<{
+  selectedEvent: string | null;
+  setSelectedEvent: (id: string | null) => void;
+} | null>(null);
+export function useEventSelection() {
+  const value = useContext(EventSelection);
+  if (!value) throw new Error('Missing event selection provider');
+  return value;
+}
 export function useWalletSelection() {
   const value = useContext(WalletSelection);
   if (!value) throw new Error('Missing wallet selection provider');
@@ -34,6 +43,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [client] = useState(
     () =>
       new QueryClient({
@@ -55,7 +65,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           <WalletSelection.Provider
             value={{ selectedWallet, setSelectedWallet }}
           >
-            {children}
+            <EventSelection.Provider
+              value={{ selectedEvent, setSelectedEvent }}
+            >
+              {children}
+            </EventSelection.Provider>
           </WalletSelection.Provider>
         </TokenSelection.Provider>
       </Selection.Provider>

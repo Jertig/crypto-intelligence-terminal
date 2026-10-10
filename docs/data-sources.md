@@ -11,7 +11,7 @@ or fabricated values are used in the production application.
 | DEX Screener | Selected base pools, liquidity, volume       | Bounded public adapter; 15-minute polling                  |
 | Helius       | Explicitly tracked Solana wallets            | Adapter tested; credential and wallet list absent          |
 | DefiLlama    | Selected protocol/chain metrics              | Not connected                                              |
-| FRED         | Macro observations and revisions             | Phase 5                                                    |
+| FRED         | Macro observations and revisions             | Bounded adapter tested; credential absent                  |
 | GoPlus       | Optional authority and holder evidence       | Bounded public adapter; hourly polling                     |
 
 Adapters validate before core logic. Tests cover malformed, empty, rate-limited,

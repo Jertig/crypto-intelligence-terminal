@@ -570,6 +570,25 @@ h1 {
 .wallet-workspace .scanner-toolbar {
   flex-wrap: wrap;
 }
+.events-workspace .scanner-toolbar {
+  flex-wrap: wrap;
+}
+.events-workspace .scanner-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.events-workspace .scanner-toolbar input,
+.events-workspace .scanner-toolbar select {
+  max-width: 200px;
+}
+.events-workspace td small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 9px;
+}
 .wallet-workspace .scanner-toolbar input {
   max-width: 160px;
 }

@@ -1,5 +1,11 @@
 # Architecture
 
+Phase 5 adds three tables and migration 0009: observed macro revisions, immutable
+sourced events and versioned event impacts. A bounded hourly engine in the same
+worker coordinates fixed-origin FRED collection and retrospective event windows.
+Database-only Events/Macro APIs feed dense tables and descriptive statistics.
+No infrastructure or dependency is added. See [methodology](events-macro.md).
+
 Phase 4 adds an optional bounded wallet coordinator in the same worker, four
 additive tables across four new migrations, and a database-only wallet DTO route.
 Normalized finalized transaction evidence is deduplicated per tracked address;
@@ -17,7 +23,7 @@ one bounded TypeScript worker, and PostgreSQL 16. PostgreSQL has no public port
 in the application Compose configuration.
 
 ```text
-External sources (Binance active; other adapters in subsequent phases)
+External sources (Binance, DEX Screener, GoPlus; optional Helius and FRED)
   → provider adapters → worker → normalization → PostgreSQL
   → feature/intelligence engines → query layer → terminal and read-only AI tools
 ```
@@ -27,7 +33,7 @@ The repository contains `apps/web`, `apps/worker`, `packages/domain`,
 bounded streaming, snapshots, OHLCV, funding/OI persistence and query APIs.
 Phase 2 adds pure feature, narrative and signal engines in the domain package,
 typed wide snapshots, bounded schedules and a database-only intelligence API.
-Wallets, events, risk and AI remain subsequent phase boundaries.
+Risk, wallets, events and macro are additive Phases 3–5; AI remains Phase 6.
 Web requests read PostgreSQL; they never fan out to providers.
 
 The web shell can render with no database or provider configured. A liveness check
