@@ -19,6 +19,7 @@ export interface MarketProvider {
   getOpenInterest(market: Market): Promise<OpenInterest>;
 }
 export type ProviderErrorCode =
+  | 'LOCAL_BUDGET_EXHAUSTED'
   | 'RATE_LIMIT'
   | 'TIMEOUT'
   | 'MALFORMED_RESPONSE'
