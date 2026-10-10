@@ -1,0 +1,1 @@
+CREATE INDEX "wallet_retention_idx" ON "wallet_transactions" USING btree ("timestamp");

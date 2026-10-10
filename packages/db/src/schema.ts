@@ -15,6 +15,14 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { Feature, Component } from '@terminal/domain/intelligence';
 import type { RiskSnapshot } from '@terminal/domain/token-risk';
+import type { WalletTransaction } from '@terminal/domain/wallets';
+export const walletProviderBudget = pgTable(
+  'wallet_provider_budget',
+  { day: text('day').primaryKey(), requests: integer('requests').notNull() },
+  (t) => [
+    check('wallet_daily_budget_valid', sql`${t.requests} BETWEEN 1 AND 4`),
+  ],
+);
 
 export const providerStatus = pgEnum('provider_status', [
   'HEALTHY',
@@ -22,6 +30,70 @@ export const providerStatus = pgEnum('provider_status', [
   'STALE',
   'DOWN',
 ]);
+
+export const trackedWallets = pgTable(
+  'tracked_wallets',
+  {
+    address: text('address').primaryKey(),
+    label: text('label').notNull(),
+    labelSource: text('label_source').notNull(),
+    active: boolean('active').notNull().default(true),
+    firstObservedAt: timestamp('first_observed_at', { withTimezone: true }),
+    lastPolledAt: timestamp('last_polled_at', { withTimezone: true }),
+    lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }),
+    coverage: text('coverage').notNull().default('UNAVAILABLE'),
+  },
+  (t) => [
+    check(
+      'wallet_coverage_valid',
+      sql`${t.coverage} IN ('UNAVAILABLE','BOUNDED','TRUNCATED')`,
+    ),
+  ],
+);
+export const walletTransactions = pgTable(
+  'wallet_transactions',
+  {
+    walletAddress: text('wallet_address')
+      .notNull()
+      .references(() => trackedWallets.address),
+    signature: text('signature').notNull(),
+    timestamp: timestamp('timestamp', { withTimezone: true }).notNull(),
+    observation: jsonb('observation').$type<WalletTransaction>().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.walletAddress, t.signature] }),
+    index('wallet_history_idx').on(t.walletAddress, t.timestamp),
+    index('wallet_retention_idx').on(t.timestamp),
+    check(
+      'wallet_observation_bounded',
+      sql`octet_length(${t.observation}::text)<=65536 AND ${t.observation}->>'signature'=${t.signature} AND ${t.observation}->'provenance'->>'providerId'='helius' AND ${t.observation}->'provenance'->>'quality'='AGGREGATED'`,
+    ),
+  ],
+);
+export const walletHistorySummaries = pgTable(
+  'wallet_history_summaries',
+  {
+    walletAddress: text('wallet_address')
+      .notNull()
+      .references(() => trackedWallets.address),
+    month: text('month').notNull(),
+    transactionCount: integer('transaction_count').notNull(),
+    failedCount: integer('failed_count').notNull(),
+    firstObservedAt: timestamp('first_observed_at', {
+      withTimezone: true,
+    }).notNull(),
+    lastObservedAt: timestamp('last_observed_at', {
+      withTimezone: true,
+    }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.walletAddress, t.month] }),
+    check(
+      'wallet_summary_counts_valid',
+      sql`${t.transactionCount}>0 AND ${t.failedCount} BETWEEN 0 AND ${t.transactionCount} AND ${t.firstObservedAt}<=${t.lastObservedAt}`,
+    ),
+  ],
+);
 export const dataQuality = pgEnum('data_quality', [
   'DIRECT',
   'AGGREGATED',

@@ -9,7 +9,8 @@
     "./heartbeat": "./src/heartbeat.ts",
     "./market": "./src/market.ts",
     "./intelligence": "./src/intelligence.ts",
-    "./tokens": "./src/tokens.ts"
+    "./tokens": "./src/tokens.ts",
+    "./wallets": "./src/wallets.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

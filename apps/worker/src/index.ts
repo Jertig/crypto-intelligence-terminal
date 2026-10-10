@@ -6,12 +6,14 @@ import { readEnvironment } from '@terminal/domain/environment';
 import { isHeartbeatFresh } from '@terminal/domain/health';
 import { MarketEngine } from './market-engine';
 import { TokenEngine } from './token-engine';
+import { WalletEngine } from './wallet-engine';
 
 async function start() {
   const config = readEnvironment(process.env, true);
   if (!config.DATABASE_URL) throw new Error('DATABASE_URL_REQUIRED');
   const connection = createDatabase(config.DATABASE_URL);
   const instanceId = randomUUID();
+  const walletEngine = new WalletEngine(connection, config);
   const startedAt = new Date();
   let lastSuccessAt: Date | null = null;
   let stopping = false;
@@ -80,6 +82,7 @@ async function start() {
   schedule();
   marketEngine?.start();
   tokenEngine?.start();
+  walletEngine.start();
 
   async function shutdown(exitCode: number) {
     if (stopping) return;
@@ -87,7 +90,11 @@ async function start() {
     clearTimeout(timer);
     const deadline = setTimeout(() => process.exit(1), 8000);
     deadline.unref();
-    await Promise.all([marketEngine?.stop(), tokenEngine?.stop()]);
+    await Promise.all([
+      marketEngine?.stop(),
+      tokenEngine?.stop(),
+      walletEngine.stop(),
+    ]);
     await pending;
     await new Promise<void>((resolve) => server.close(() => resolve()));
     try {
