@@ -71,6 +71,13 @@
       "when": 1791637087896,
       "tag": "0009_woozy_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791651056193,
+      "tag": "0010_steady_spiral",
+      "breakpoints": true
     }
   ]
 }
