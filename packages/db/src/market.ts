@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Provenance } from '@terminal/domain';
+import { providerFreshnessMs } from '@terminal/domain/health';
 import {
   marketSchema,
   snapshotSchema,
@@ -321,7 +322,7 @@ export async function queryMarkets(
         freshness(
           row.lastSuccessAt,
           now,
-          row.providerId.includes('perpetual') ? 600000 : 90000,
+          providerFreshnessMs(row.providerId),
         ) === 'STALE'
           ? 'STALE'
           : row.status,

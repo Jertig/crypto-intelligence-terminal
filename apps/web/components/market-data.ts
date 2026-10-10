@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { marketResponseSchema, freshness } from '@terminal/domain/market';
+import { providerFreshnessMs } from '@terminal/domain/health';
 export const formatNumber = (
   value: number | null | undefined,
   compact = false,
@@ -44,7 +45,7 @@ export function useMarketData() {
                 freshness(
                   provider.lastSuccessAt,
                   new Date(Math.max(now, query.dataUpdatedAt)),
-                  provider.providerId.includes('perpetual') ? 600000 : 90000,
+                  providerFreshnessMs(provider.providerId),
                 ) === 'STALE'
                   ? 'STALE'
                   : provider.status,

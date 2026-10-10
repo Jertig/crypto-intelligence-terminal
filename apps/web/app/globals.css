@@ -1203,3 +1203,108 @@ td:first-child {
     margin-top: 90px;
   }
 }
+
+.token-workspace {
+  min-width: 0;
+}
+.token-scanner {
+  margin-bottom: 12px;
+}
+.token-scanner th,
+.token-scanner td,
+.risk-category th,
+.risk-category td {
+  padding: 9px 10px;
+}
+.token-scanner td small {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-size: 10px;
+}
+.token-scanner tr[aria-selected='true'] {
+  background: rgba(48, 103, 78, 0.07);
+}
+.token-scanner tr[aria-selected='true'] td:first-child {
+  box-shadow: inset 2px 0 var(--green);
+}
+.risk-components {
+  display: grid;
+  gap: 12px;
+}
+.risk-explanation {
+  padding: 14px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.risk-explanation > strong {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.risk-score-line {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.risk-category details {
+  white-space: normal;
+  min-width: 170px;
+}
+.risk-category details p {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.risk-factors {
+  margin: 10px 0;
+  font-size: 11px;
+}
+.risk-factors > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.risk-factors dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.token-address {
+  overflow-wrap: anywhere;
+  font-size: 10px;
+}
+.token-pool {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.token-inspector .inspector-content {
+  padding: 14px;
+}
+.token-inspector table {
+  table-layout: fixed;
+  width: 100%;
+}
+.token-inspector th,
+.token-inspector td {
+  white-space: normal;
+  font-size: 10px;
+  padding: 7px 2px;
+}
+.token-inspector .memo-content {
+  padding: 14px;
+  line-height: 1.7;
+  font-size: 11px;
+}
+@media (max-width: 1100px) {
+  .risk-category .panel-heading,
+  .vacuum-panel .panel-heading {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

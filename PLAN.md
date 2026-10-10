@@ -11,7 +11,24 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 2 bounded plan
+## Phase 3 bounded plan
+
+1. Reuse existing domain/provider/database contracts and the single worker.
+   Add fixed-origin DEX Screener and optional GoPlus adapters, timeouts, rate-limit
+   handling, bounded responses and explicit missing fields.
+2. Track maximum eight configured Solana/EVM tokens and three selected pools per
+   token, defaulting to verified wrapped SOL and native Solana USDC. Persist typed
+   pool/security observations and versioned risk snapshots; no whole-chain crawl.
+3. Keep contract capability, ownership, liquidity and market-structure indicators
+   separate. Expose weights, coverage, provenance, limitations and partial values.
+   Never turn provider flags into allegations or missing fields into safety.
+4. Define liquidity-vacuum v1 using same-pool historical liquidity/turnover;
+   require observed history and disclose absent depth/spread/wallet evidence.
+5. Deliver dense Tokens/Risk workspaces and an evidence inspector. Run full QA,
+   review resources/security/design, document, commit coherently, push, PR and
+   merge only latest green CI before Phase 4.
+
+## Completed Phase 2 plan
 
 Compute closed-bar features and sampled breadth/regime with strict evidence
 gates. Persist versioned typed snapshots, curated weighted taxonomy and

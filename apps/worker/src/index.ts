@@ -5,6 +5,7 @@ import { removeHeartbeat, saveHeartbeat } from '@terminal/db/heartbeat';
 import { readEnvironment } from '@terminal/domain/environment';
 import { isHeartbeatFresh } from '@terminal/domain/health';
 import { MarketEngine } from './market-engine';
+import { TokenEngine } from './token-engine';
 
 async function start() {
   const config = readEnvironment(process.env, true);
@@ -20,6 +21,12 @@ async function start() {
     config.MARKET_INGESTION_ENABLED === 'false'
       ? undefined
       : new MarketEngine(connection, config);
+  const tokenEngine =
+    config.TOKEN_INGESTION_ENABLED === 'true' ||
+    (config.TOKEN_INGESTION_ENABLED !== 'false' &&
+      config.MARKET_INGESTION_ENABLED !== 'false')
+      ? new TokenEngine(connection, config)
+      : undefined;
 
   async function beat() {
     try {
@@ -72,6 +79,7 @@ async function start() {
   }
   schedule();
   marketEngine?.start();
+  tokenEngine?.start();
 
   async function shutdown(exitCode: number) {
     if (stopping) return;
@@ -79,7 +87,7 @@ async function start() {
     clearTimeout(timer);
     const deadline = setTimeout(() => process.exit(1), 8000);
     deadline.unref();
-    await marketEngine?.stop();
+    await Promise.all([marketEngine?.stop(), tokenEngine?.stop()]);
     await pending;
     await new Promise<void>((resolve) => server.close(() => resolve()));
     try {

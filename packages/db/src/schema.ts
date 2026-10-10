@@ -14,6 +14,7 @@ import {
   jsonb,
 } from 'drizzle-orm/pg-core';
 import type { Feature, Component } from '@terminal/domain/intelligence';
+import type { RiskSnapshot } from '@terminal/domain/token-risk';
 
 export const providerStatus = pgEnum('provider_status', [
   'HEALTHY',
@@ -379,4 +380,171 @@ export const signalExplanations = pgTable(
     reason: text('reason').notNull(),
   },
   (table) => [primaryKey({ columns: [table.signalId, table.name] })],
+);
+
+export const trackedTokens = pgTable(
+  'tracked_tokens',
+  {
+    id: text('id').primaryKey(),
+    chain: text('chain').notNull(),
+    address: text('address').notNull(),
+    symbol: text('symbol').notNull(),
+    name: text('name').notNull(),
+    active: boolean('active').notNull().default(true),
+  },
+  (table) => [
+    check(
+      'token_chain_valid',
+      sql`${table.chain} IN ('solana','ethereum','base','bsc')`,
+    ),
+  ],
+);
+export const dexPairs = pgTable('dex_pairs', {
+  id: text('id').primaryKey(),
+  tokenId: text('token_id')
+    .notNull()
+    .references(() => trackedTokens.id),
+  address: text('address').notNull(),
+  dex: text('dex').notNull(),
+  active: boolean('active').notNull().default(true),
+  quoteSymbol: text('quote_symbol').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }),
+});
+export const dexSnapshots = pgTable(
+  'dex_snapshots',
+  {
+    pairId: text('pair_id')
+      .notNull()
+      .references(() => dexPairs.id),
+    bucketAt: timestamp('bucket_at', { withTimezone: true }).notNull(),
+    priceUsd: numeric('price_usd', { precision: 38, scale: 18 }),
+    liquidityUsd: numeric('liquidity_usd', { precision: 38, scale: 8 }),
+    volume24hUsd: numeric('volume_24h_usd', { precision: 38, scale: 8 }),
+    marketCapUsd: numeric('market_cap_usd', { precision: 38, scale: 8 }),
+    fdvUsd: numeric('fdv_usd', { precision: 38, scale: 8 }),
+    priceChange24h: numeric('price_change_24h', { precision: 20, scale: 8 }),
+    ...observationColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.pairId, table.bucketAt] }),
+    index('dex_retention_idx').on(table.bucketAt),
+    check(
+      'dex_values_valid',
+      sql`(${table.priceUsd} IS NULL OR ${table.priceUsd}>0) AND (${table.liquidityUsd} IS NULL OR ${table.liquidityUsd}>=0) AND (${table.volume24hUsd} IS NULL OR ${table.volume24hUsd}>=0) AND (${table.marketCapUsd} IS NULL OR ${table.marketCapUsd}>=0) AND (${table.fdvUsd} IS NULL OR ${table.fdvUsd}>=0) AND ${table.quality}='AGGREGATED' AND length(${table.providerId})>0 AND length(${table.source})>0`,
+    ),
+  ],
+);
+export const tokenSecuritySnapshots = pgTable(
+  'token_security_snapshots',
+  {
+    tokenId: text('token_id')
+      .notNull()
+      .references(() => trackedTokens.id),
+    bucketAt: timestamp('bucket_at', { withTimezone: true }).notNull(),
+    mintable: boolean('mintable'),
+    freezable: boolean('freezable'),
+    balanceMutable: boolean('balance_mutable'),
+    closable: boolean('closable'),
+    feeUpgradable: boolean('fee_upgradable'),
+    hookUpgradable: boolean('hook_upgradable'),
+    nonTransferable: boolean('non_transferable'),
+    defaultStateUpgradable: boolean('default_state_upgradable'),
+    top10HolderShare: numeric('top10_holder_share', {
+      precision: 12,
+      scale: 8,
+    }),
+    holderCount: numeric('holder_count', { precision: 20, scale: 0 }),
+    trustedToken: boolean('trusted_token'),
+    ...observationColumns(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tokenId, table.bucketAt] }),
+    index('token_security_retention_idx').on(table.bucketAt),
+    check(
+      'token_security_valid',
+      sql`(${table.top10HolderShare} IS NULL OR ${table.top10HolderShare} BETWEEN 0 AND 1) AND (${table.holderCount} IS NULL OR ${table.holderCount}>=0) AND ${table.quality}='AGGREGATED' AND length(${table.source})>0 AND length(${table.providerId})>0`,
+    ),
+  ],
+);
+export const riskSnapshots = pgTable(
+  'risk_snapshots',
+  {
+    tokenId: text('token_id')
+      .notNull()
+      .references(() => trackedTokens.id),
+    pairId: text('pair_id').references(() => dexPairs.id),
+    bucketAt: timestamp('bucket_at', { withTimezone: true }).notNull(),
+    calculatedAt: timestamp('calculated_at', { withTimezone: true }).notNull(),
+    contractScore: numeric('contract_score', { precision: 12, scale: 6 }),
+    contractCoverage: numeric('contract_coverage', {
+      precision: 8,
+      scale: 6,
+    }).notNull(),
+    ownershipScore: numeric('ownership_score', { precision: 12, scale: 6 }),
+    ownershipCoverage: numeric('ownership_coverage', {
+      precision: 8,
+      scale: 6,
+    }).notNull(),
+    liquidityScore: numeric('liquidity_score', { precision: 12, scale: 6 }),
+    liquidityCoverage: numeric('liquidity_coverage', {
+      precision: 8,
+      scale: 6,
+    }).notNull(),
+    structureScore: numeric('structure_score', { precision: 12, scale: 6 }),
+    structureCoverage: numeric('structure_coverage', {
+      precision: 8,
+      scale: 6,
+    }).notNull(),
+    categories: jsonb('categories')
+      .$type<RiskSnapshot['categories']>()
+      .notNull(),
+    liquidityChange1h: numeric('liquidity_change_1h', {
+      precision: 20,
+      scale: 8,
+    }),
+    volumeLiquidityRatio: numeric('volume_liquidity_ratio', {
+      precision: 20,
+      scale: 8,
+    }),
+    vacuum: text('vacuum').notNull(),
+    vacuumReason: text('vacuum_reason').notNull(),
+    ...observationColumns(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.tokenId, table.bucketAt, table.methodologyVersion],
+    }),
+    index('risk_retention_idx').on(table.bucketAt),
+    check(
+      'risk_snapshot_valid',
+      sql`${table.quality}='DERIVED' AND length(${table.methodologyVersion})>0 AND jsonb_array_length(${table.categories})=4 AND octet_length(${table.categories}::text)<=65536 AND ${table.vacuum} IN ('UNAVAILABLE','HEALTHY','THINNING','VACUUM_FORMING','CRITICAL')`,
+    ),
+    ...[
+      {
+        name: 'contract',
+        score: table.contractScore,
+        coverage: table.contractCoverage,
+      },
+      {
+        name: 'ownership',
+        score: table.ownershipScore,
+        coverage: table.ownershipCoverage,
+      },
+      {
+        name: 'liquidity',
+        score: table.liquidityScore,
+        coverage: table.liquidityCoverage,
+      },
+      {
+        name: 'structure',
+        score: table.structureScore,
+        coverage: table.structureCoverage,
+      },
+    ].map((c) =>
+      check(
+        `risk_${c.name}_valid`,
+        sql`${c.coverage} BETWEEN 0 AND 1 AND (${c.score} IS NULL OR (${c.coverage}=1 AND ${c.score} BETWEEN 0 AND 100))`,
+      ),
+    ),
+  ],
 );
