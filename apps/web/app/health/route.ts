@@ -2,7 +2,11 @@ import { eq } from 'drizzle-orm';
 import { workerHeartbeats } from '@terminal/db';
 import { configuredDatabase } from '../../lib/database';
 import { freshness } from '@terminal/domain/market';
-import { systemHealth, type DatabaseState } from '@terminal/domain/health';
+import {
+  systemHealth,
+  providerFreshnessMs,
+  type DatabaseState,
+} from '@terminal/domain/health';
 import { providerHealth } from '@terminal/db/schema';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +43,7 @@ export async function GET(request: Request) {
             freshness(
               row.lastSuccessAt,
               new Date(),
-              row.providerId.includes('perpetual') ? 600000 : 90000,
+              providerFreshnessMs(row.providerId),
             ) === 'STALE'
               ? 'STALE'
               : row.status,
@@ -56,7 +60,7 @@ export async function GET(request: Request) {
   }
   const result = {
     ...systemHealth(database, heartbeat, new Date()),
-    phase: 2,
+    phase: 3,
     providers: {
       configured: new Set(providers.map((row) => row.providerId.split(':')[0]))
         .size,

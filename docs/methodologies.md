@@ -97,3 +97,9 @@ No request-time provider fan-out. History expires after 180 days with bounded
 hourly deletion. One version at 12 assets produces 622,080 feature rows;
 at maximum 30, 1,555,200. Compression helps but this is not a size guarantee.
 Phase 8 enforces the final disk budget.
+
+## Token risk and liquidity
+
+See [token risk v1](token-risk.md) for separate category weights, coverage,
+capability semantics, source timing, same-pool comparison and liquidity-vacuum
+proxy thresholds. Missing authority, ownership, LP or depth evidence remains null.

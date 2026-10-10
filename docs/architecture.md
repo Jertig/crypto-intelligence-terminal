@@ -1,5 +1,10 @@
 # Architecture
 
+Phase 3 adds a bounded token coordinator to the existing worker and five additive
+tables via migration 0004. It writes selected DEX pools, security evidence and
+separate versioned indicators. The Tokens/Risk workspaces query stored DTOs;
+provider calls remain in the worker. See [token architecture and methodology](token-risk.md).
+
 The target runtime contains four services: Caddy, the Next.js web application,
 one bounded TypeScript worker, and PostgreSQL 16. PostgreSQL has no public port
 in the application Compose configuration.

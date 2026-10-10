@@ -11,6 +11,10 @@ funding/open-interest adapters. Provider failures and stale observations remain
 visible. The narrative matrix exposes curated membership, partial coverage,
 component weights and counter-evidence. The asset inspector explains fourteen
 versioned derived features. Breadth and regime require sufficient evidence.
+Tokens and Risk provide a bounded DEX liquidity scanner, provider evidence,
+four separate risk categories and a transparent liquidity-vacuum proxy.
+Missing history, unsupported authorities and ownership relationships stay
+unavailable. [Token methodology](docs/token-risk.md) explains inputs and limits.
 [Methodologies](docs/methodologies.md) documents formulas and limits.
 The approved reference is a design direction; its illustrative values are never
 used as market data.
@@ -73,7 +77,7 @@ server and exercise navigation, keyboard controls, empty/error states, and layou
 
 GitHub Actions runs these checks plus a fresh Docker build and readiness test.
 The [Phase 0 QA report](docs/qa-report.md), [Phase 1 review](docs/qa/phase-1.md)
-and [Phase 2 review](docs/qa/phase-2.md)
+and [Phase 2 review](docs/qa/phase-2.md), followed by [Phase 3](docs/qa/phase-3.md),
 record results and scope limitations.
 Production dependency audit is clean. One upstream development-tool advisory is
 locally mitigated and documented in [dependency security](docs/dependency-security.md).

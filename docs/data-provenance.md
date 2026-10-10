@@ -14,3 +14,9 @@ funding rates, or AI interpretations.
 
 Provider configuration is distinct from provider health. An unconfigured provider
 must never be labeled healthy, live, degraded, or stale.
+
+DEX Screener and GoPlus do not supply a uniform upstream observation timestamp.
+Their AGGREGATED provenance uses collection time, explicitly labeled as such in
+the Tokens/Risk UI. It never claims the aggregate was measured at that instant.
+Derived liquidity comparisons use current collection versus same-pool prior
+collection. New calculation time cannot reset the underlying input's freshness.

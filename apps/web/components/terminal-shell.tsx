@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { TokenWorkspace, TokenInspector } from './token-workspace';
 import {
   MarketScanner,
   MarketInspector,
@@ -248,7 +249,7 @@ function CommandPalette({
             <small>
               {'phase' in item &&
               typeof item.phase === 'number' &&
-              item.phase > 1
+              item.phase > 3
                 ? 'Not available yet'
                 : 'Open'}
             </small>
@@ -453,39 +454,48 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
                 </tr>
               </thead>
               <tbody>
-                {plannedProviders.map((provider) => (
-                  <tr key={provider.name}>
-                    <td>{provider.name}</td>
-                    <td>{provider.purpose}</td>
-                    <td>
-                      <span className="quality-label">
-                        {provider.name === 'Binance' &&
-                        marketQuery.data?.providers.length
-                          ? marketQuery.data.providers
-                              .map(
-                                (item) =>
-                                  `${item.providerId.replace('binance:', '')}: ${item.status}`,
-                              )
-                              .join(' · ')
-                          : 'Not connected'}
-                      </span>
-                    </td>
-                    <td>
-                      {provider.name === 'Binance' &&
-                      marketQuery.data?.providers.find(
-                        (item) => item.lastSuccessAt,
-                      )?.lastSuccessAt
-                        ? new Date(
-                            marketQuery.data.providers.find(
-                              (item) => item.lastSuccessAt,
-                            )!.lastSuccessAt!,
-                          ).toLocaleTimeString('en-GB', {
-                            timeZone: 'Asia/Jakarta',
-                          }) + ' WIB'
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {plannedProviders.map((provider) => {
+                  const prefix =
+                    provider.name === 'DEX Screener'
+                      ? 'dexscreener'
+                      : provider.name.toLowerCase();
+                  const capabilities =
+                    marketQuery.data?.providers.filter(
+                      (item) =>
+                        item.providerId === prefix ||
+                        item.providerId.startsWith(prefix + ':'),
+                    ) ?? [];
+                  const latest = capabilities
+                    .map((item) => item.lastSuccessAt)
+                    .filter((time): time is string => time !== null)
+                    .sort()
+                    .at(-1);
+                  return (
+                    <tr key={provider.name}>
+                      <td>{provider.name}</td>
+                      <td>{provider.purpose}</td>
+                      <td>
+                        <span className="quality-label">
+                          {capabilities.length
+                            ? capabilities
+                                .map(
+                                  (item) =>
+                                    `${item.providerId.replace(prefix + ':', '')}: ${item.status}`,
+                                )
+                                .join(' · ')
+                            : 'Not connected'}
+                        </span>
+                      </td>
+                      <td>
+                        {latest
+                          ? new Date(latest).toLocaleTimeString('en-GB', {
+                              timeZone: 'Asia/Jakarta',
+                            }) + ' WIB'
+                          : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -747,7 +757,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Narrative intelligence · Phase 2
+            Token & liquidity intelligence · Phase 3
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -778,6 +788,8 @@ export function TerminalShell({
             </>
           ) : workspace === 'narratives' ? (
             <NarrativeWorkspace />
+          ) : ['tokens', 'risk'].includes(workspace) ? (
+            <TokenWorkspace riskView={workspace === 'risk'} />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -808,7 +820,11 @@ export function TerminalShell({
             </>
           )}
         </main>
-        <Inspector market={market} clear={() => setSelected(null)} />
+        {['tokens', 'risk'].includes(workspace) ? (
+          <TokenInspector />
+        ) : (
+          <Inspector market={market} clear={() => setSelected(null)} />
+        )}
       </div>
       <footer className="terminal-footer">
         <span>

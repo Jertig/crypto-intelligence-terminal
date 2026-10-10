@@ -6,6 +6,15 @@ const Selection = createContext<{
   selected: string | null;
   setSelected: (id: string | null) => void;
 } | null>(null);
+const TokenSelection = createContext<{
+  selectedToken: string | null;
+  setSelectedToken: (id: string | null) => void;
+} | null>(null);
+export function useTokenSelection() {
+  const value = useContext(TokenSelection);
+  if (!value) throw new Error('Missing token selection provider');
+  return value;
+}
 export function useMarketSelection() {
   const value = useContext(Selection);
   if (!value) throw new Error('Missing selection provider');
@@ -14,6 +23,7 @@ export function useMarketSelection() {
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [client] = useState(
     () =>
       new QueryClient({
@@ -31,7 +41,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <Selection.Provider value={{ selected, setSelected }}>
-        {children}
+        <TokenSelection.Provider value={{ selectedToken, setSelectedToken }}>
+          {children}
+        </TokenSelection.Provider>
       </Selection.Provider>
     </QueryClientProvider>
   );
