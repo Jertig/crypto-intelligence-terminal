@@ -11,7 +11,19 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 5 bounded plan
+## Phase 6 bounded plan
+
+Preserve the merged Phase 5 architecture and all coverage. Add read-only scoped
+query contracts over small structured evidence, deterministic provenance/freshness
+and conflict gates, an optional fixed-origin Responses adapter, and the six-part
+analyst memo. Model output selects validated evidence IDs; server-derived factual
+values and bounded interpretation templates cannot be replaced by free prose.
+No new runtime service or third-party dependency. Missing model credentials keep
+the evidence brief useful and explicitly withhold AI interpretation. Verify missing,
+stale, conflicting, unavailable and adversarial inputs; complete all QA, documents,
+visual/security/resource review and latest-head CI before Phase 7.
+
+## Completed Phase 5 plan
 
 Preserve the merged architecture and prior coverage. Add bounded FRED observations
 and locally observed revisions, immutable public-source manual events, transparent

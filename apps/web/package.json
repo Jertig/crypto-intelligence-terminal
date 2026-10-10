@@ -13,6 +13,7 @@
     "@tanstack/react-table": "9.2.8",
     "@terminal/db": "workspace:*",
     "@terminal/domain": "workspace:*",
+    "@terminal/providers": "workspace:*",
     "drizzle-orm": "0.45.4",
     "lightweight-charts": "5.2.1",
     "next": "16.4.0",

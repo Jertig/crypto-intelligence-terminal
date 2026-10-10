@@ -22,3 +22,8 @@ Cached data ages during query failure. Production keys remain server-side only.
 
 DEX/GoPlus return aggregates without an upstream observation timestamp. We retain
 and label collection time explicitly. See [token scope and source documentation](token-risk.md).
+
+The optional OpenAI analyst adapter is separate from market data. It is disabled
+by default, requires explicit key/model/enablement, and has not been tested live.
+Its bounded tools query existing terminal evidence; no AI-generated facts are
+stored as provider observations. See [privacy and grounding](ai-analyst.md).

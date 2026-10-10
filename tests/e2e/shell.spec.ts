@@ -60,6 +60,17 @@ test('workspace navigation opens the market core and discloses later planned fun
     .click();
   await expect(page).toHaveURL('/ai-analyst');
   await expect(
+    page.getByRole('heading', { name: 'AI analyst memo', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('complementary', { name: 'Analyst evidence policy' }),
+  ).toBeVisible();
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Research', exact: true })
+    .click();
+  await expect(page).toHaveURL('/research');
+  await expect(
     page.getByText('This workspace is not available yet', { exact: true }),
   ).toBeVisible();
   await expect(

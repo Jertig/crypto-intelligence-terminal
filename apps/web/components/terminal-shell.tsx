@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AnalystWorkspace, AnalystInspector } from './analyst-workspace';
 import { TokenWorkspace, TokenInspector } from './token-workspace';
 import { WalletWorkspace, WalletInspector } from './wallet-workspace';
 import {
@@ -256,7 +257,7 @@ function CommandPalette({
             <small>
               {'phase' in item &&
               typeof item.phase === 'number' &&
-              item.phase > 5
+              item.phase > 6
                 ? 'Not available yet'
                 : 'Open'}
             </small>
@@ -769,7 +770,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Events & macro research · Phase 5
+            Evidence analyst · Phase 6
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -808,6 +809,8 @@ export function TerminalShell({
             <EventsWorkspace />
           ) : ['macro', 'economic'].includes(workspace) ? (
             <MacroWorkspace />
+          ) : workspace === 'ai-analyst' ? (
+            <AnalystWorkspace />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -846,6 +849,8 @@ export function TerminalShell({
           <EventInspector />
         ) : ['macro', 'economic'].includes(workspace) ? (
           <MacroInspector />
+        ) : workspace === 'ai-analyst' ? (
+          <AnalystInspector />
         ) : (
           <Inspector market={market} clear={() => setSelected(null)} />
         )}
