@@ -89,7 +89,7 @@ GitHub Actions runs these checks plus a fresh Docker build and readiness test.
 The [Phase 0 QA report](docs/qa-report.md), [Phase 1 review](docs/qa/phase-1.md)
 and [Phase 2 review](docs/qa/phase-2.md), followed by [Phase 3](docs/qa/phase-3.md)
 and [Phase 4](docs/qa/phase-4.md), followed by [Phase 5](docs/qa/phase-5.md)
-and [Phase 6](docs/qa/phase-6.md),
+and [Phase 6](docs/qa/phase-6.md), followed by [Phase 7](docs/qa/phase-7.md),
 record results and scope limitations.
 Production dependency audit is clean. One upstream development-tool advisory is
 locally mitigated and documented in [dependency security](docs/dependency-security.md).
@@ -100,6 +100,11 @@ The [AI analyst](docs/ai-analyst.md) retrieves bounded read-only evidence and se
 facts, derived signals, interpretation, counter-evidence, confidence and sources.
 Missing optional model credentials preserve the evidence brief and explicitly
 withhold AI interpretation.
+
+[Research workflow](docs/research-workflow.md) adds persistent watchlists,
+operator notes, saved scanner views and structured queries, immutable evidence
+reports and explainable in-app alerts. Missing inputs remain UNKNOWN; no automated
+trading or external messaging exists. Report freshness is frozen at capture time.
 
 The shared provenance contract distinguishes direct, aggregated, derived,
 estimated, and AI-interpreted evidence. Derived and estimated values require a

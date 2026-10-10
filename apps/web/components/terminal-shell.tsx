@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { AnalystWorkspace, AnalystInspector } from './analyst-workspace';
+import { ResearchWorkspace, ResearchInspector } from './research-workspace';
 import { TokenWorkspace, TokenInspector } from './token-workspace';
 import { WalletWorkspace, WalletInspector } from './wallet-workspace';
 import {
@@ -257,7 +258,7 @@ function CommandPalette({
             <small>
               {'phase' in item &&
               typeof item.phase === 'number' &&
-              item.phase > 6
+              item.phase > 7
                 ? 'Not available yet'
                 : 'Open'}
             </small>
@@ -770,7 +771,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Evidence analyst · Phase 6
+            Research workflow · Phase 7
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -811,6 +812,10 @@ export function TerminalShell({
             <MacroWorkspace />
           ) : workspace === 'ai-analyst' ? (
             <AnalystWorkspace />
+          ) : ['research', 'watchlist', 'alerts', 'reports'].includes(
+              workspace,
+            ) ? (
+            <ResearchWorkspace key={workspace} workspace={workspace} />
           ) : ['data-status', 'api-sources', 'settings'].includes(workspace) ? (
             <SystemWorkspace key={workspace} workspace={workspace} />
           ) : (
@@ -851,6 +856,10 @@ export function TerminalShell({
           <MacroInspector />
         ) : workspace === 'ai-analyst' ? (
           <AnalystInspector />
+        ) : ['research', 'watchlist', 'alerts', 'reports'].includes(
+            workspace,
+          ) ? (
+          <ResearchInspector />
         ) : (
           <Inspector market={market} clear={() => setSelected(null)} />
         )}
