@@ -1,7 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { FeatureInspector } from './narrative-workspace';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { savedViewSchema, type SavedView } from '@terminal/domain/research';
 import { useQuery } from '@tanstack/react-query';
 import { flexRender } from '@tanstack/react-table';
 import {
@@ -92,7 +94,17 @@ const columns: LegacyColumnDef<MarketRow>[] = [
     ),
   },
 ];
-export function MarketScanner({
+export function MarketScanner(props: {
+  selected: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <Suspense fallback={<p className="panel-foot">Loading market scanner…</p>}>
+      <MarketScannerContent {...props} />
+    </Suspense>
+  );
+}
+function MarketScannerContent({
   selected,
   onSelect,
 }: {
@@ -106,6 +118,29 @@ export function MarketScanner({
     { id: 'quoteVolume24h', desc: true },
   ]);
   const [visibility, setVisibility] = useState<Record<string, boolean>>({});
+  const viewId = useSearchParams().get('view');
+  const saved = useQuery({
+    queryKey: ['saved-view', viewId],
+    enabled: !!viewId,
+    retry: false,
+    queryFn: async () => {
+      const r = await fetch(
+        `/api/research/view?id=${encodeURIComponent(viewId!)}`,
+        { cache: 'no-store', signal: AbortSignal.timeout(10000) },
+      );
+      if (!r.ok) throw new Error('VIEW_UNAVAILABLE');
+      return savedViewSchema.parse(await r.json());
+    },
+  });
+  const [appliedView, setAppliedView] = useState<SavedView | undefined>(
+    undefined,
+  );
+  if (saved.data && saved.data !== appliedView) {
+    setAppliedView(saved.data);
+    setFilter(saved.data.filter);
+    setSorting([{ id: saved.data.sort, desc: saved.data.desc }]);
+    setVisibility(Object.fromEntries(saved.data.hidden.map((c) => [c, false])));
+  }
   const table = useLegacyTable({
     data: rows,
     columns,
@@ -123,6 +158,15 @@ export function MarketScanner({
   const visible = table.getRowModel().rows;
   return (
     <section className="panel scanner live-scanner">
+      {viewId && (
+        <p className="panel-foot">
+          {saved.isError
+            ? 'Saved view unavailable. Default scanner remains available.'
+            : saved.data
+              ? 'Saved filter, sort and columns applied.'
+              : 'Loading saved view…'}
+        </p>
+      )}
       <div className="panel-heading">
         <h2>Market scanner</h2>
         <span>BINANCE SPOT · USDT</span>

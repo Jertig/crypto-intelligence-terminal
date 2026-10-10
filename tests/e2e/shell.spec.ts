@@ -71,6 +71,17 @@ test('workspace navigation opens the market core and discloses later planned fun
     .click();
   await expect(page).toHaveURL('/research');
   await expect(
+    page.getByRole('heading', { name: 'Research notebook', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('complementary', { name: 'Research policy' }),
+  ).toBeVisible();
+  await page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'CEX Flows', exact: true })
+    .click();
+  await expect(page).toHaveURL('/cex-flows');
+  await expect(
     page.getByText('This workspace is not available yet', { exact: true }),
   ).toBeVisible();
   await expect(

@@ -11,7 +11,17 @@ private keys, automate trading, fabricate market facts, or deploy to the VPS
 without deployment authorization. Missing optional credentials do not block
 independent work; document them and preserve explicit unavailable states.
 
-## Phase 6 bounded plan
+## Phase 7 bounded plan
+
+Preserve all merged work. Add typed bounded watchlists, notes with edit conflicts,
+structured saved queries, functional scanner views, frozen evidence reports and
+deterministic in-app alerts. Reuse the existing worker and analyst renderer;
+UNKNOWN preserves missing inputs and never generates a recovery. Credential-free
+retention, no model calls for capture, no external notifications or execution.
+Complete all QA/security/resource/visual checks and exact-head green CI before
+merging and starting Phase 8 production hardening. No VPS deployment authorized.
+
+## Completed Phase 6 plan
 
 Preserve the merged Phase 5 architecture and all coverage. Add read-only scoped
 query contracts over small structured evidence, deterministic provenance/freshness

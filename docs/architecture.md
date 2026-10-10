@@ -1,5 +1,12 @@
 # Architecture
 
+Phase 7 adds eight typed research tables and bounded CRUD routes to the existing
+web process, plus a serial deterministic alert/retention loop in the existing
+worker. Saved scanner views reuse the scanner; report bodies reuse the analyst
+renderer. Reports contain server-retrieved evidence without model calls, with
+immutable update protection and digest validation. No service or dependency added.
+See research-workflow.md for storage caps, transition rules and concurrency.
+
 Phase 6 adds read-only bounded evidence tools, explicit grounding/freshness gates,
 an optional stateless model adapter and a six-part analyst memo. Structured model
 selection cannot replace factual values or invent citations. All tools use fixed

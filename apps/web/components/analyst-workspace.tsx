@@ -137,168 +137,7 @@ export function AnalystWorkspace() {
           {error}
         </p>
       )}
-      {memo && (
-        <>
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Retrieval audit</h2>
-              <span>
-                AS OF {stamp(memo.observedAt)} · MODEL {memo.providerState}
-              </span>
-            </div>
-            <p className="panel-foot">
-              Snapshot query: {memo.request.asset} · {memo.request.question}.
-              Freshness states are assessed at the recorded as-of time; rebuild
-              the memo for current evidence.
-            </p>
-            <div className="table-scroll">
-              <table className="market-table">
-                <thead>
-                  <tr>
-                    <th>Tool</th>
-                    <th>Status</th>
-                    <th>Rows</th>
-                    <th>Limits</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {memo.toolResults.map((t) => (
-                    <tr key={t.tool}>
-                      <td>{t.tool}</td>
-                      <td>{t.state}</td>
-                      <td>{t.rows}</td>
-                      <td>{t.limitation}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-          {(['Facts', 'Derived Signals'] as const).map((section) => {
-            const items =
-              section === 'Facts' ? memo.facts : memo.derivedSignals;
-            return (
-              <section className="panel" key={section}>
-                <div className="panel-heading">
-                  <h2>{section}</h2>
-                  <span>{items.length} OBSERVATIONS · NO AI VALUES</span>
-                </div>
-                <div className="table-scroll">
-                  <table className="market-table">
-                    <thead>
-                      <tr>
-                        <th>Subject / metric</th>
-                        <th>Value / unit</th>
-                        <th>Evidence state</th>
-                        <th>Source / input time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((e) => (
-                        <tr key={e.id}>
-                          <td>
-                            {e.subject} / {e.label}
-                            <small>{e.id}</small>
-                          </td>
-                          <td>
-                            {e.value === null
-                              ? 'Unavailable'
-                              : typeof e.value === 'number'
-                                ? e.value.toLocaleString('en-GB', {
-                                    maximumFractionDigits: 6,
-                                  })
-                                : e.value}{' '}
-                            {e.unit}
-                          </td>
-                          <td>
-                            {e.state}
-                            <small>{e.limitation}</small>
-                          </td>
-                          <td>
-                            {e.provenance.providerId} · {e.provenance.quality}
-                            <small>{stamp(e.provenance.sourceTimestamp)}</small>
-                            <small>{e.provenance.methodologyVersion}</small>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {!items.length && (
-                  <p className="panel-foot">
-                    Evidence unavailable. No factual value supplied.
-                  </p>
-                )}
-              </section>
-            );
-          })}
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Interpretation</h2>
-              <span>AI INTERPRETATION · CONSTRAINED & CITED</span>
-            </div>
-            {memo.interpretations.length ? (
-              memo.interpretations.map((i) => (
-                <p className="panel-foot" key={i.evidenceId}>
-                  {i.text} [{i.evidenceId}]
-                </p>
-              ))
-            ) : (
-              <p className="panel-foot">
-                AI interpretation unavailable or insufficient eligible evidence.
-                The evidence brief above is deterministic, not an AI-generated
-                market conclusion.
-              </p>
-            )}
-          </section>
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Counter-evidence</h2>
-              <span>MISSING · STALE · CONFLICTING</span>
-            </div>
-            {memo.counterEvidence.map((c, i) => (
-              <p className="panel-foot" key={i}>
-                {c}
-              </p>
-            ))}
-          </section>
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Confidence</h2>
-              <span>{memo.confidence}</span>
-            </div>
-            <p className="panel-foot">{memo.confidenceReason}</p>
-          </section>
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Sources</h2>
-              <span>TRACE EVERY CLAIM</span>
-            </div>
-            <div className="table-scroll">
-              <table className="market-table">
-                <thead>
-                  <tr>
-                    <th>Evidence</th>
-                    <th>Canonical source</th>
-                    <th>Collection time</th>
-                    <th>State</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {memo.sources.map((s) => (
-                    <tr key={s.evidenceId}>
-                      <td>{s.evidenceId}</td>
-                      <td>{s.provenance.source}</td>
-                      <td>{stamp(s.provenance.ingestedAt)}</td>
-                      <td>{s.state}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
+      {memo && <MemoEvidence memo={memo} />}
     </div>
   );
 }
@@ -338,5 +177,169 @@ export function AnalystInspector() {
         </p>
       </div>
     </aside>
+  );
+}
+
+export function MemoEvidence({ memo }: { memo: AnalystMemo }) {
+  return (
+    <>
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Retrieval audit</h2>
+          <span>
+            AS OF {stamp(memo.observedAt)} · MODEL {memo.providerState}
+          </span>
+        </div>
+        <p className="panel-foot">
+          Snapshot query: {memo.request.asset} · {memo.request.question}.
+          Freshness states are assessed at the recorded as-of time; rebuild the
+          memo for current evidence.
+        </p>
+        <div className="table-scroll">
+          <table className="market-table">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Status</th>
+                <th>Rows</th>
+                <th>Limits</th>
+              </tr>
+            </thead>
+            <tbody>
+              {memo.toolResults.map((t) => (
+                <tr key={t.tool}>
+                  <td>{t.tool}</td>
+                  <td>{t.state}</td>
+                  <td>{t.rows}</td>
+                  <td>{t.limitation}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {(['Facts', 'Derived Signals'] as const).map((section) => {
+        const items = section === 'Facts' ? memo.facts : memo.derivedSignals;
+        return (
+          <section className="panel" key={section}>
+            <div className="panel-heading">
+              <h2>{section}</h2>
+              <span>{items.length} OBSERVATIONS · NO AI VALUES</span>
+            </div>
+            <div className="table-scroll">
+              <table className="market-table">
+                <thead>
+                  <tr>
+                    <th>Subject / metric</th>
+                    <th>Value / unit</th>
+                    <th>Evidence state</th>
+                    <th>Source / input time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((e) => (
+                    <tr key={e.id}>
+                      <td>
+                        {e.subject} / {e.label}
+                        <small>{e.id}</small>
+                      </td>
+                      <td>
+                        {e.value === null
+                          ? 'Unavailable'
+                          : typeof e.value === 'number'
+                            ? e.value.toLocaleString('en-GB', {
+                                maximumFractionDigits: 6,
+                              })
+                            : e.value}{' '}
+                        {e.unit}
+                      </td>
+                      <td>
+                        {e.state}
+                        <small>{e.limitation}</small>
+                      </td>
+                      <td>
+                        {e.provenance.providerId} · {e.provenance.quality}
+                        <small>{stamp(e.provenance.sourceTimestamp)}</small>
+                        <small>{e.provenance.methodologyVersion}</small>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!items.length && (
+              <p className="panel-foot">
+                Evidence unavailable. No factual value supplied.
+              </p>
+            )}
+          </section>
+        );
+      })}
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Interpretation</h2>
+          <span>AI INTERPRETATION · CONSTRAINED & CITED</span>
+        </div>
+        {memo.interpretations.length ? (
+          memo.interpretations.map((i) => (
+            <p className="panel-foot" key={i.evidenceId}>
+              {i.text} [{i.evidenceId}]
+            </p>
+          ))
+        ) : (
+          <p className="panel-foot">
+            AI interpretation unavailable or insufficient eligible evidence. The
+            evidence brief above is deterministic, not an AI-generated market
+            conclusion.
+          </p>
+        )}
+      </section>
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Counter-evidence</h2>
+          <span>MISSING · STALE · CONFLICTING</span>
+        </div>
+        {memo.counterEvidence.map((c, i) => (
+          <p className="panel-foot" key={i}>
+            {c}
+          </p>
+        ))}
+      </section>
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Confidence</h2>
+          <span>{memo.confidence}</span>
+        </div>
+        <p className="panel-foot">{memo.confidenceReason}</p>
+      </section>
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Sources</h2>
+          <span>TRACE EVERY CLAIM</span>
+        </div>
+        <div className="table-scroll">
+          <table className="market-table">
+            <thead>
+              <tr>
+                <th>Evidence</th>
+                <th>Canonical source</th>
+                <th>Collection time</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              {memo.sources.map((s) => (
+                <tr key={s.evidenceId}>
+                  <td>{s.evidenceId}</td>
+                  <td>{s.provenance.source}</td>
+                  <td>{stamp(s.provenance.ingestedAt)}</td>
+                  <td>{s.state}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
   );
 }

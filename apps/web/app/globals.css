@@ -1392,3 +1392,62 @@ td:first-child {
   margin-top: 4px;
   line-height: 1.5;
 }
+.research-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.research-workspace button {
+  margin: 3px 4px 3px 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  padding: 6px 9px;
+  color: var(--text);
+  background: var(--surface-elevated);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.research-workspace button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.research-workspace details > summary {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  cursor: pointer;
+}
+.research-workspace .analyst-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.research-workspace .analyst-form fieldset,
+.research-workspace .research-actions {
+  grid-column: 1/-1;
+}
+@media (max-width: 650px) {
+  .research-workspace .analyst-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.research-workspace .note-text {
+  white-space: pre-wrap;
+}
+.research-workspace input[type='checkbox'] {
+  accent-color: var(--green);
+}
+.research-workspace .analyst-form input:not([type='checkbox']),
+.research-workspace .analyst-form select {
+  min-width: 0;
+  max-width: 100%;
+  padding: 7px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-elevated);
+  color: var(--text);
+  font: inherit;
+}
+.research-workspace .panel-heading {
+  flex-wrap: wrap;
+  gap: 6px;
+}

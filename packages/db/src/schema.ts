@@ -1,4 +1,154 @@
 import { sql } from 'drizzle-orm';
+import type { AlertRule, Evaluation } from '@terminal/domain/research';
+import type { AnalystMemo } from '@terminal/domain/analyst';
+export const watchlists = pgTable(
+  'watchlists',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    check('watchlist_title_valid', sql`length(${t.title}) BETWEEN 1 AND 60`),
+  ],
+);
+export const watchlistItems = pgTable(
+  'watchlist_items',
+  {
+    watchlistId: uuid('watchlist_id')
+      .notNull()
+      .references(() => watchlists.id, { onDelete: 'cascade' }),
+    symbol: text('symbol').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.watchlistId, t.symbol] }),
+    check('watch_symbol_valid', sql`${t.symbol} ~ '^[A-Z0-9]{1,24}$'`),
+  ],
+);
+export const researchNotes = pgTable(
+  'research_notes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    asset: text('asset').notNull(),
+    body: text('body').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'note_valid',
+      sql`length(${t.title}) BETWEEN 1 AND 60 AND ${t.asset} IN ('BTC','ETH','SOL') AND length(${t.body}) BETWEEN 1 AND 3000 AND octet_length(${t.body})<=12000`,
+    ),
+  ],
+);
+export const aiQueries = pgTable(
+  'ai_queries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    asset: text('asset').notNull(),
+    question: text('question').notNull(),
+    tools: text('tools').array().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'saved_query_valid',
+      sql`length(${t.title}) BETWEEN 1 AND 60 AND ${t.asset} IN ('BTC','ETH','SOL') AND length(${t.question}) BETWEEN 1 AND 500 AND cardinality(${t.tools}) BETWEEN 1 AND 7 AND ${t.tools} <@ ARRAY['market','features','risk','wallet','events','macro','providers']::text[]`,
+    ),
+  ],
+);
+export const savedViews = pgTable(
+  'saved_views',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    filter: text('filter').notNull(),
+    sort: text('sort').notNull(),
+    descending: boolean('descending').notNull(),
+    hidden: text('hidden').array().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'saved_view_valid',
+      sql`length(${t.title}) BETWEEN 1 AND 60 AND ${t.filter} ~ '^[A-Za-z0-9]{0,24}$' AND ${t.sort} IN ('base','price','change24h','quoteVolume24h','oi','funding','freshness') AND cardinality(${t.hidden})<=6 AND NOT ('base'=ANY(${t.hidden})) AND ${t.hidden} <@ ARRAY['price','change24h','quoteVolume24h','oi','funding','freshness']::text[]`,
+    ),
+  ],
+);
+export const reportSnapshots = pgTable(
+  'report_snapshots',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    asset: text('asset').notNull(),
+    observedAt: timestamp('observed_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    confidence: text('confidence').notNull(),
+    digest: text('digest').notNull(),
+    memo: jsonb('memo').$type<AnalystMemo>().notNull(),
+  },
+  (t) => [
+    index('report_retention_idx').on(t.createdAt),
+    check(
+      'report_valid',
+      sql`length(${t.title}) BETWEEN 1 AND 60 AND ${t.asset} IN ('BTC','ETH','SOL') AND ${t.confidence} IN ('LIMITED','INSUFFICIENT') AND ${t.digest} ~ '^[a-f0-9]{64}$' AND octet_length(${t.memo}::text)<=131072`,
+    ),
+  ],
+);
+export const alerts = pgTable(
+  'alerts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: text('title').notNull(),
+    kind: text('kind').notNull(),
+    rule: jsonb('rule').$type<AlertRule>().notNull(),
+    enabled: boolean('enabled').default(true).notNull(),
+    lastKnownState: text('last_known_state').default('UNKNOWN').notNull(),
+    evaluation: jsonb('evaluation').$type<Evaluation>(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'alert_valid',
+      sql`length(${t.title}) BETWEEN 1 AND 60 AND ${t.kind} IN ('THRESHOLD','DATA_RISK','PROVIDER_DOWN','NARRATIVE_CHANGE','RISK','LIQUIDITY') AND ${t.rule}->>'kind'=${t.kind} AND octet_length(${t.rule}::text)<=2048 AND ${t.lastKnownState} IN ('UNKNOWN','CLEAR','TRIGGERED') AND (${t.evaluation} IS NULL OR octet_length(${t.evaluation}::text)<=8192)`,
+    ),
+  ],
+);
+export const alertNotifications = pgTable(
+  'alert_notifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    alertId: uuid('alert_id')
+      .notNull()
+      .references(() => alerts.id, { onDelete: 'cascade' }),
+    state: text('state').notNull(),
+    evaluation: jsonb('evaluation').$type<Evaluation>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index('notification_retention_idx').on(t.createdAt),
+    check(
+      'notification_valid',
+      sql`${t.state} IN ('TRIGGERED','RECOVERED') AND octet_length(${t.evaluation}::text)<=8192`,
+    ),
+  ],
+);
 import {
   check,
   pgEnum,
