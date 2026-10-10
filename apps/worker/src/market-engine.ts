@@ -10,6 +10,10 @@ import {
 } from '@terminal/db/market';
 import type { DatabaseConnection } from '@terminal/db';
 import type { Candle, Market, Snapshot } from '@terminal/domain/market';
+import {
+  computeIntelligence,
+  retainIntelligence,
+} from '@terminal/db/intelligence';
 
 const defaultSymbols = [
   'BTCUSDT',
@@ -37,6 +41,7 @@ export class MarketEngine {
   private streamObserved = 0;
   private lastStreamLog = 0;
   private lastRetention = 0;
+  private lastNarrative = 0;
   constructor(
     private readonly connection: DatabaseConnection,
     private readonly config: {
@@ -62,7 +67,12 @@ export class MarketEngine {
     );
   }
   start() {
-    this.loops = [this.spotLoop(), this.flushLoop(), this.derivativeLoop()];
+    this.loops = [
+      this.spotLoop(),
+      this.flushLoop(),
+      this.derivativeLoop(),
+      this.intelligenceLoop(),
+    ];
   }
   private errorCode(error: unknown) {
     return error instanceof ProviderError
@@ -229,6 +239,8 @@ export class MarketEngine {
         }
         if (Date.now() - this.lastRetention > 3600000) {
           const result = await runMarketRetention(this.connection);
+          if (!this.abort.signal.aborted)
+            await retainIntelligence(this.connection);
           console.info(
             `Market retention completed: ${result.removed} expired records removed.`,
           );
@@ -292,5 +304,34 @@ export class MarketEngine {
     this.abort.abort();
     this.stream?.stop();
     await Promise.allSettled(this.loops);
+  }
+  private async intelligenceLoop() {
+    while (!this.abort.signal.aborted) {
+      if (!this.markets.length) {
+        await this.wait(5000);
+        continue;
+      }
+      try {
+        const now = new Date();
+        const narrativesDue = now.getTime() - this.lastNarrative >= 900000;
+        const result = await computeIntelligence(
+          this.connection,
+          now,
+          narrativesDue,
+          this.abort.signal,
+          this.markets.length,
+        );
+        if (narrativesDue) this.lastNarrative = now.getTime();
+        console.info(
+          `Intelligence batch completed: ${result.markets} markets; ${result.features} features; ${result.narratives} narratives.`,
+        );
+      } catch {
+        if (!this.abort.signal.aborted)
+          console.error(
+            'Intelligence batch unavailable: DATABASE_OR_INPUT_UNAVAILABLE',
+          );
+      }
+      await this.wait(300000);
+    }
   }
 }
