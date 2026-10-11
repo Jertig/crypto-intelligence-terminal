@@ -18,5 +18,6 @@
   "dependencies": {
     "@terminal/domain": "workspace:*",
     "zod": "4.6.5"
-  }
+  },
+  "description": "Validated adapters for market, wallet, macro and analyst providers."
 }
