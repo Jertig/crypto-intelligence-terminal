@@ -53,7 +53,8 @@ export function retainedBackups(names) {
     ...new Set([...daily.values(), ...weekly.values(), ...monthly.values()]),
   ].sort();
 }
-export function validateProduction(c, qa = false) {
+export function validateProduction(c, qa = false, privateAccess = false) {
+  if (qa && privateAccess) throw new Error('CONFLICTING_DEPLOYMENT_PROFILES');
   const passwords = [
     'POSTGRES_PASSWORD',
     'POSTGRES_WEB_PASSWORD',
@@ -75,7 +76,7 @@ export function validateProduction(c, qa = false) {
     u.origin !== c.APP_ORIGIN ||
     u.username ||
     u.password ||
-    (qa
+    (qa || privateAccess
       ? c.APP_ORIGIN !== 'https://localhost:18443'
       : !/^([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(u.hostname) ||
         u.port !== '')
@@ -123,12 +124,13 @@ function within(path) {
 }
 async function configuration(args) {
   const qa = args.includes('--qa'),
+    privateAccess = args.includes('--private'),
     index = args.indexOf('--env-file');
   const path = within(
     join(root, index === -1 ? '.env.production' : (args[index + 1] ?? '')),
   );
   const c = parseEnv(await readFile(path, 'utf8'));
-  validateProduction(c, qa);
+  validateProduction(c, qa, privateAccess);
   if (process.platform !== 'win32' && ((await stat(path)).mode & 0o077) !== 0)
     throw new Error('ENV_FILE_MUST_BE_0600');
   execFileSync('git', ['check-ignore', '--quiet', path], {
@@ -142,6 +144,9 @@ async function configuration(args) {
     '-f',
     'compose.production.yaml',
     ...(qa ? ['-f', 'infra/docker/compose.production-qa.yaml'] : []),
+    ...(privateAccess
+      ? ['-f', 'infra/docker/compose.production-private.yaml']
+      : []),
     '-p',
     qa ? 'terminal-production-qa' : 'terminal-production',
   ];

@@ -183,4 +183,31 @@ describe('bounded production operations', () => {
     expect(sameOriginRequest(request, config.APP_ORIGIN)).toBe(true);
     expect(sameOriginRequest(request, 'https://other.example.com')).toBe(false);
   });
+  it('permits live ingestion only in an explicit private production profile', () => {
+    const privateConfig = {
+      ...config,
+      APP_ORIGIN: 'https://localhost:18443',
+      MARKET_INGESTION_ENABLED: 'true',
+      TOKEN_INGESTION_ENABLED: 'true',
+    };
+    expect(validateProduction(privateConfig, false, true)).toBe(true);
+    expect(() => validateProduction(privateConfig)).toThrow();
+    expect(() => validateProduction(privateConfig, true)).toThrow();
+    expect(() => validateProduction(privateConfig, true, true)).toThrow();
+  });
+  it('keeps private production restricted to one HTTPS origin and strong credentials', () => {
+    const privateConfig = { ...config, APP_ORIGIN: 'https://localhost:18443' };
+    for (const change of [
+      { APP_ORIGIN: 'http://localhost:18443' },
+      { APP_ORIGIN: 'https://localhost:443' },
+      { APP_ORIGIN: 'https://terminal.example.com' },
+      { APP_ORIGIN: 'https://localhost:18443/path' },
+      { ACCESS_HASH: 'plain-password' },
+      { POSTGRES_WEB_PASSWORD: config.POSTGRES_PASSWORD! },
+      { WEB_IMAGE: 'latest' },
+    ])
+      expect(() =>
+        validateProduction({ ...privateConfig, ...change }, false, true),
+      ).toThrow();
+  });
 });
