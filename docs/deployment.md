@@ -76,6 +76,41 @@ Public TLS issuance, firewall behavior, sustained host capacity, timer delivery
 and off-host recovery still require deployment validation. Local container tests
 have passed; no live VPS deployment or off-host recovery is claimed.
 
+## Private access without a domain
+
+Use the same production images, roles, volumes and backup paths with an explicit
+private profile. Set `APP_ORIGIN=https://localhost:18443` in `.env.production`.
+Add `--private` to every operations command, including the backup timer:
+
+```sh
+node infra/ops/terminal.mjs validate --private
+node infra/ops/terminal.mjs initialize --private
+node infra/ops/terminal.mjs start --private
+node infra/ops/terminal.mjs backup --private
+node infra/ops/terminal.mjs verify-restore --private
+```
+
+The profile replaces public ports with `127.0.0.1:18443`, keeps gateway
+authentication, and uses Caddy's internal CA for HTTPS. Live providers remain
+available. It does not use the isolated QA database or backup directory.
+For direct Compose commands, add
+`-f infra/docker/compose.production-private.yaml` after the production file.
+
+From the client, forward the same local port through authenticated SSH:
+
+```sh
+ssh -N -L 127.0.0.1:18443:127.0.0.1:18443 user@host
+```
+
+Visit `https://localhost:18443`. Obtain Caddy's public root certificate through
+the authenticated SSH connection (`/data/caddy/pki/authorities/local/root.crt`
+inside Caddy). Validate requests with `curl --cacert root.crt --user operator`;
+let curl prompt for the gateway password. Browser access requires trusting this
+CA in a dedicated browser profile. Do not disable TLS verification, export CA
+private keys, or expose this listener on a public interface. No domain or public
+certificate is claimed. Switching to public HTTPS requires verified DNS and the
+standard production profile.
+
 ## Isolated container verification
 
 Build the four images above, then run:

@@ -226,6 +226,59 @@ async function run() {
       file,
   );
   command('validate');
+  execFileSync(
+    process.execPath,
+    [cli, 'validate', '--private', '--env-file', file],
+    {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    },
+  );
+  const privateModel = JSON.parse(
+    docker([
+      'compose',
+      '--env-file',
+      file,
+      '-f',
+      'compose.production.yaml',
+      '-f',
+      'infra/docker/compose.production-private.yaml',
+      '-p',
+      'terminal-production',
+      'config',
+      '--format',
+      'json',
+    ]),
+  );
+  const privatePorts = privateModel.services.caddy.ports;
+  check(
+    'Private production publishes only loopback HTTPS',
+    privatePorts.length === 1 &&
+      privatePorts[0].host_ip === '127.0.0.1' &&
+      String(privatePorts[0].published) === '18443' &&
+      privatePorts[0].target === 18443 &&
+      ['web', 'worker', 'postgres'].every(
+        (name) => !privateModel.services[name].ports?.length,
+      ),
+  );
+  check(
+    'Private production keeps the authenticated TLS gateway',
+    privateModel.services.caddy.environment.TLS_PROFILE === 'local_tls' &&
+      privateModel.services.caddy.environment.ACCESS_HASH ===
+        config.ACCESS_HASH &&
+      privateModel.services.web.environment.APP_ORIGIN === origin,
+  );
+  check(
+    'Private production retains production volumes and backup paths',
+    privateModel.volumes['postgres-data'].name ===
+      'terminal-production_postgres-data' &&
+      privateModel.services.worker.volumes.some(
+        (m) =>
+          m.target === '/operations' &&
+          m.source.replaceAll('\\', '/').endsWith('/data/operations'),
+      ),
+  );
   dc(['stop', 'caddy', 'web', 'worker']);
   command('initialize');
   const start = performance.now();

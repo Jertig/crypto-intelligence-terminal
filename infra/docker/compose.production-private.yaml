@@ -1,0 +1,6 @@
+# Production data and backups, reachable only through an SSH tunnel.
+services:
+  caddy:
+    ports: !override ['127.0.0.1:18443:18443']
+    environment:
+      TLS_PROFILE: local_tls
