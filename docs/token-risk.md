@@ -1,7 +1,6 @@
 # Token risk and liquidity
 
-Phase 3 adds DEX Screener and optional GoPlus evidence to the existing single
-worker. `/api/tokens` reads PostgreSQL only; opening a workspace never fans out to
+The worker collects DEX Screener and optional GoPlus evidence. `/api/tokens` reads PostgreSQL only; opening a workspace never fans out to
 providers. Default configured mints are wrapped SOL and USDC on Solana, verified
 against [Solana](https://solana.com/docs/tokens/basics/sync-native) and
 [Circle](https://developers.circle.com/stablecoins/usdc-contract-addresses).

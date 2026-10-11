@@ -1,13 +1,15 @@
-# Resource and storage review
+# Reference deployment profile
 
-Measurements are from local Docker Desktop on 11 October 2026 (Jakarta), not a
-2 vCPU/2 GB VPS benchmark or a sustained maximum-universe load test. Production
+The Compose defaults target a reference host with 2 vCPU, 2 GB RAM and 40 GB disk.
+These are a sizing example, not architecture requirements. Measurements below
+were taken on local Docker Desktop on 11 October 2026 (Jakarta), not on that
+VPS profile or under sustained maximum-universe load. Production
 uses the same four services with immutable prebuilt images. No extra persistent
 worker, queue, cache, analytics database or monitoring server was introduced.
 
-## Isolated secured production gate
+## Recorded local verification
 
-The final operational verifier used no market/provider/model credentials or live
+The operational verifier used no market/provider/model credentials or live
 ingestion. All 50 checks passed, including a real dump/disposable restore. Startup
 took 25.16 seconds; worker shutdown took 0.67 seconds, exit zero, no OOM. Twelve
 warm serial authenticated API samples across health, markets, research and
@@ -22,7 +24,7 @@ operations took 7–55 ms. These are observations, not percentile/SLA claims.
 
 Total sample: 131.21 MiB; aggregate cap: 1,300 MiB. Approximately 748 MiB remains
 on a 2 GiB machine for its OS/Docker. Connection/work/V8/temp limits are documented
-in [operations](production-operations.md). Short idle samples do not prove absence
+in [operations](operations.md). Short idle samples do not prove absence
 of long-term growth or sufficient headroom under all optional providers.
 
 Two additional actual-provider preview samples taken during the 48-image browser
@@ -33,7 +35,7 @@ two snapshots are not sustained-load averages or memory-growth certification.
 
 Effective runtime image sizes reported by Docker: web 77,268,470 bytes, worker
 62,063,545, PostgreSQL 116,984,050 and Caddy 44,974,197: about 287 MiB total before
-shared-layer savings. Build tools/caches stay on the workstation/CI, not the VPS.
+shared-layer savings. Build tools/caches stay outside the runtime host.
 
 ## Retained local data and growth
 
@@ -52,14 +54,14 @@ storage estimate, not invented market evidence or a complete database forecast.
 
 Features, narratives, risks, provider histories, indexes, dead tuples and WAL need
 additional space. Retention and row/cardinality caps are independently tested.
-Daily bars are permanent per the specification; they grow slowly but are still
+Daily bars are retained permanently; they grow slowly but are still
 subject to the database budget. The database warns at 6 GiB and protects ingestion
 at 8 GiB; this is a control boundary, not a guarantee against batch overshoot.
 Hourly cleanup is bounded, independent of credentials and continues under
 protection. Deletes permit page reuse but do not automatically shrink relation
-files. Inspect actual relation growth/autovacuum on the VPS before expanding scope.
+files. Inspect actual relation growth/autovacuum on the chosen host before expanding scope.
 
-Plan a 40 GB disk around the 8 GiB database control boundary, 8 GiB backup archive
+For the reference 40 GB disk, plan around the 8 GiB database control boundary, 8 GiB backup archive
 budget, OS/images, bounded logs, WAL/temp files and substantial free recovery
 space. Four Docker log streams are capped at 10 MB × three files each. Bound host
 journald separately. PostgreSQL's 512 MiB WAL setting is a target, not an absolute
@@ -75,4 +77,4 @@ reports, one note and one watchlist. Small fixture-free QA archives do not estab
 production backup size. Seven daily/four weekly/three monthly buckets overlap and
 must fit the archive budget. Independent off-host transfer and clean-host recovery
 remain unverified; see [recovery](disaster-recovery.md). Benchmark actual CPU,
-memory, query latency, growth and recovery on the authorized VPS before go-live.
+memory, query latency, growth and recovery on the deployment host before go-live.

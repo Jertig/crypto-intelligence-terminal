@@ -26,3 +26,5 @@ test-results/
 .work/
 **/next-env.d.ts
 !packages/db/migrations/
+.codex/
+AGENTS.md

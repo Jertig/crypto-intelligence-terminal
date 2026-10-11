@@ -1,81 +1,85 @@
 # Architecture
 
-Phase 7 adds eight typed research tables and bounded CRUD routes to the existing
-web process, plus a serial deterministic alert/retention loop in the existing
-worker. Saved scanner views reuse the scanner; report bodies reuse the analyst
-renderer. Reports contain server-retrieved evidence without model calls, with
-immutable update protection and digest validation. No service or dependency added.
-See research-workflow.md for storage caps, transition rules and concurrency.
+The terminal uses four runtime services: a Next.js web application, one TypeScript
+worker, PostgreSQL 16 and Caddy. Host migration and backup commands run as one-off
+operations. There is no separate queue, cache or analytics database.
 
-Phase 6 adds read-only bounded evidence tools, explicit grounding/freshness gates,
-an optional stateless model adapter and a six-part analyst memo. Structured model
-selection cannot replace factual values or invent citations. All tools use fixed
-database queries; no table, service or third-party dependency added. See
-[evidence policy and bounds](ai-analyst.md).
+## Service boundaries
 
-Phase 5 adds three tables and migration 0009: observed macro revisions, immutable
-sourced events and versioned event impacts. A bounded hourly engine in the same
-worker coordinates fixed-origin FRED collection and retrospective event windows.
-Database-only Events/Macro APIs feed dense tables and descriptive statistics.
-No infrastructure or dependency is added. See [methodology](events-macro.md).
-
-Phase 4 adds an optional bounded wallet coordinator in the same worker, four
-additive tables across four new migrations, and a database-only wallet DTO route.
-Normalized finalized transaction evidence is deduplicated per tracked address;
-compaction is transactional and the daily provider budget persists across restarts.
-Domain helpers classify observed activity and explain relationship groups without
-common-owner claims. No additional services or dependencies. See [wallet methodology](wallet-intelligence.md).
-
-Phase 3 adds a bounded token coordinator to the existing worker and five additive
-tables via migration 0004. It writes selected DEX pools, security evidence and
-separate versioned indicators. The Tokens/Risk workspaces query stored DTOs;
-provider calls remain in the worker. See [token architecture and methodology](token-risk.md).
-
-The target runtime contains four services: Caddy, the Next.js web application,
-one bounded TypeScript worker, and PostgreSQL 16. PostgreSQL has no public port
-in the application Compose configuration.
-
-```text
-External sources (Binance, DEX Screener, GoPlus; optional Helius and FRED)
-  → provider adapters → worker → normalization → PostgreSQL
-  → feature/intelligence engines → query layer → terminal and read-only AI tools
+```mermaid
+flowchart LR
+  Browser -->|Authenticated HTTPS| Caddy --> Web[Next.js web]
+  Providers[External providers] --> Adapters[Provider adapters]
+  Adapters --> Worker[Ingestion and research worker]
+  Worker --> DB[(PostgreSQL)]
+  Web -->|Queries and research records| DB
+  Web -.->|Explicit analyst request| Model[Optional model provider]
+  Backup[Host backup timer] -->|Consistent dump| DB
 ```
 
-The repository contains `apps/web`, `apps/worker`, `packages/domain`,
-`packages/db`, and `packages/providers`. Phase 1 adds Binance normalization,
-bounded streaming, snapshots, OHLCV, funding/OI persistence and query APIs.
-Phase 2 adds pure feature, narrative and signal engines in the domain package,
-typed wide snapshots, bounded schedules and a database-only intelligence API.
-Risk, wallets, events and macro are additive Phases 3–5. Phase 6 adds the analyst.
-Market-data requests read PostgreSQL without provider fan-out. The optional
-explicitly enabled analyst can call its fixed model provider on user submission;
-its tools still read only bounded database projections.
+The worker owns scheduled provider calls, normalization, feature/risk computation,
+alerts, retention and operational measurements. Market-facing HTTP routes read
+stored projections, so opening a workspace does not multiply provider requests.
+The optional analyst adapter is the exception: an explicit submission can call its
+configured model API, while all evidence tools remain read-only database queries.
 
-The web shell can render with no database or provider configured. A liveness check
-must distinguish a running web process from database readiness. The worker must
-validate configuration, connect to the database, and stop gracefully. Market
-ingestion uses one combined stream and bounded REST schedules.
+Caddy handles production HTTPS and gateway authentication. PostgreSQL has no
+published production port. Separate web and worker database roles have only the
+grants needed by their jobs; administrator migrations are run explicitly.
 
-Decisions: pnpm workspaces, strict TypeScript, PostgreSQL migrations via Drizzle,
-Zod validation, server-side credentials, bounded connection pools, and a single
-worker. Do not introduce Redis, Python services, or a heavy observability stack.
+## Repository layout
 
-The complete requirements are in `specification/02_ARCHITECTURE_AND_DATA_SPEC.md`.
+| Path                 | Responsibility                                                              |
+| -------------------- | --------------------------------------------------------------------------- |
+| `apps/web`           | Routes, terminal workspaces, shared query state and research forms          |
+| `apps/worker`        | Provider schedules, derived evidence, alerts and process lifecycle          |
+| `packages/domain`    | Validation contracts, pure calculations, versions and evidence rules        |
+| `packages/providers` | Fixed-origin adapters, normalization and provider failures                  |
+| `packages/db`        | Drizzle schema, migrations, persistence and query projections               |
+| `infra`              | Container builds, gateway, runtime grants, backups and restore verification |
+| `tests`              | Deterministic unit fixtures, PostgreSQL integration and browser behavior    |
 
-## Production operations
+pnpm workspaces share these packages without publishing them. Strict TypeScript
+and Zod validate boundaries; Drizzle owns the migration history. Generated schema
+snapshots and lockfiles are committed because they make builds and migrations
+reproducible.
 
-Phase 8 keeps four runtime services and adds one bounded operations singleton
-(37 tables, twelve migrations). The existing worker observes disk/DB capacity and
-performs credential-independent maintenance. Protected/unknown capacity pauses
-engine groups while heartbeat and retained reads continue. Production research
-writes fail closed on absent/stale status. Operational measurements introduce no
-market facts or research methodology.
+## Data flow
 
-Caddy authenticates the shared operator over HTTPS before all routes; its internal
-loopback health listener is not published. Separate web/worker PostgreSQL roles
-cannot create schemas or assume the administrator. Administrator migrations/grants
-are explicit one-off operations. Prebuilt pinned images, read-only application
-roots, resource caps and bounded logs fit the target deployment model. Host backup
-automation and the disposable restore verifier use the internal database. Off-host
-recovery remains a required operator configuration. See production-operations.md,
-deployment.md and disaster-recovery.md for the trust and retention model.
+1. A provider adapter validates a response and normalizes identity, units and times.
+2. A worker persists it transactionally, with duplicate and late-arrival guards.
+3. Domain functions derive versioned features from eligible retained observations.
+4. Query projections expose values, lineage, coverage and missing-input reasons.
+5. The terminal and analyst tools consume those projections.
+
+Market snapshots are latest-value records; closed candles and derived observations
+have retention policies. Token data keeps contract, ownership, liquidity and market
+structure separate. Wallet activity is sampled per configured address. Macro
+period dates, observed revisions and collection times remain distinct. Events are
+immutable records with source citations.
+
+Research records share the same database. Saved views reuse the scanner; saved
+queries select typed analyst tools. Report capture retrieves evidence without a
+model call, freezes its as-of state and stores an immutable body with a digest.
+A serial alert evaluator records explainable state transitions. See
+[research workflow](research-workflow.md).
+
+## Design decisions
+
+- **One worker:** the configured universes and polling schedules share a single,
+  resource-limited process. A queue would add operations without an established need.
+- **PostgreSQL for observations and research:** transactions, constraints and
+  indexed queries support idempotent ingestion and consistent records in one store.
+- **Shared pure calculations:** formulas can be tested independently from providers,
+  storage and UI. Method versions and input references make results auditable.
+- **Provider isolation:** credentials and network details stay behind adapters.
+  Missing credentials or one provider failure do not block unrelated ingestion.
+- **Stored evidence before interpretation:** the analyst cannot replace source
+  values or invent citations. Its retrieval and output contracts are documented in
+  [AI analyst](ai-analyst.md).
+
+The web shell can render without a database. Liveness differs from database/worker
+readiness. Capacity protection pauses ingestion and research writes while retained
+reads, heartbeat and cleanup continue. See [reliability](reliability.md),
+[operations](operations.md) and the [reference deployment profile](reference-profile.md)
+for schedules, shutdown behavior and measured resource limits.

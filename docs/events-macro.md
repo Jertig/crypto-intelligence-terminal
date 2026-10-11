@@ -1,7 +1,7 @@
 # Events and macro methodology
 
-Phase 5 reuses PostgreSQL and the existing single worker. No news crawler,
-whole-market index or additional service is introduced.
+Events and macro analysis use PostgreSQL and the ingestion worker. Events are
+sourced manual records; there is no automatic news crawler or release calendar.
 
 ## FRED observations and observed revisions
 
@@ -123,9 +123,8 @@ asserted. The UI labels relationships as historical association.
 FRED credentials are absent locally. Live FRED ingestion and official event
 transcription are unverified; the actual application displays unavailable/empty
 states. Synthetic provider, event and statistical fixtures exist only in tests.
-Existing Binance/DEX/GoPlus evidence remains independent. Three additive tables
-and one migration bring the database to 28 tables/ten migrations. Responses cap
+Existing Binance/DEX/GoPlus evidence remains independent. Responses cap
 events at 100, impacts at 1,200, macro series at twelve × 2,000 dates and daily
 crypto at three × 2,000 points. Raw minute-history retention limits event studies.
-Observed revisions are bounded as above; operational disk protection is Phase 8.
-No VPS deployment, paid acquisition, trading or signing is performed.
+Revision retention follows the limits above; [operations](operations.md) describes
+database capacity protection.

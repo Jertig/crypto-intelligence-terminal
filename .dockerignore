@@ -13,5 +13,6 @@
 **/*.log
 data
 backups
-design
 docs
+.codex
+**/AGENTS.md

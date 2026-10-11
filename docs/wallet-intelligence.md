@@ -25,7 +25,7 @@ with on-chain block time as source timestamp and separate collection time.
 
 Reference: [Helius address history](https://www.helius.dev/docs/api-reference/enhanced-transactions/gettransactionsbyaddress).
 Plan availability and billing can change; inspect the account quota before enabling
-live ingestion. The project never purchases or enables paid plans.
+live ingestion. Enabling an integration does not change the provider account's plan.
 
 ## Sampling and resource policy
 
@@ -56,9 +56,8 @@ Monthly summaries retain only observed transaction/failed counts and time bounds
 not synthetic balances or chain-wide totals. Replays below the compaction watermark
 are excluded rather than counted again; late unseen transactions below it may be
 omitted. The first-observed time is preserved and never labeled account creation.
-Inactive configurations preserve historical evidence. Phase 8 extends global
-retention/disk protections; inactive identities and monthly summaries must also be
-covered by those operational limits.
+Inactive configurations preserve historical evidence. Database capacity limits
+also apply to inactive identities and monthly summaries; see [operations](operations.md).
 
 ## Behavior and reputation
 
@@ -76,14 +75,14 @@ shown separately. A recent computation does not refresh an old provider poll.
 There is no unsupported sniper, early-buyer, passive-holder, insider, or profitability
 classification. No USD buy/sell intent is inferred from transfer direction.
 
-`wallet-reputation:v1` preserves the specification's conceptual weights: realized
+`wallet-reputation:v1` defines conceptual weights: realized
 performance 25%, early-entry quality 20%, consistency 15%, capital efficiency 15%,
 rug avoidance 10%, holding discipline 10%, cluster confidence 5%. All values and the
 aggregate score are unavailable, coverage zero, state UNCALIBRATED. Each component
 explains its missing evidence. Cost basis, outcomes, position lifecycles, launch
-timing, and validated ownership/performance datasets are absent. The specification
-requires backtesting/calibration before a meaningful reputation score; these are
-deferred explicitly rather than replaced with an activity count proxy.
+timing, and validated ownership/performance datasets are absent. A meaningful
+reputation score requires backtesting and calibration; activity counts cannot
+substitute for that evidence.
 
 ## Relationships and explorer
 

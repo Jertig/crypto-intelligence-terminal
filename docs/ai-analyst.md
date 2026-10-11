@@ -1,6 +1,6 @@
 # Evidence analyst v1
 
-Phase 6 is a read-only research layer over this terminal's own retained evidence.
+The analyst is a read-only research layer over the terminal's retained evidence.
 It permits no arbitrary SQL, URLs, files, commands, signing, keys or execution.
 Missing model credentials preserve the deterministic evidence brief.
 
@@ -10,7 +10,7 @@ The operator selects BTC/ETH/SOL, a question up to 500 characters and one to sev
 unique evidence families. POST /api/analyst requires same-origin strict JSON up
 to 4 KiB. One analysis runs per web process; at most six submissions/minute. It
 is on demand, never automatic model polling. Local access is loopback-only;
-production authentication is Phase 8.
+production authentication uses the HTTPS gateway.
 
 | Tool      | Fixed parameterized SELECT projection                                           |
 | --------- | ------------------------------------------------------------------------------- |
@@ -31,7 +31,7 @@ BTC/ETH token-risk mapping is explicitly unavailable; a reported ticker symbol
 cannot establish on-chain identity. Origin validation compares the browser-facing
 Host rather than Next's internal URL and rejects foreign or rebound hosts. The
 local default accepts HTTP loopback origins only; production origin/access is
-configured in Phase 8.
+configured through APP_ORIGIN and the production gateway.
 Risk-category freshness conservatively uses its oldest contributing input time,
 with actual input sources, rather than the unrelated latest DEX observation or
 calculation time. Historical inputs can therefore make this compact brief stale;
@@ -67,9 +67,9 @@ ownership or insider status. No calibrated forecasting model is claimed.
 ## Optional model and privacy
 
 AI_ANALYST_ENABLED defaults false. Explicit server-side OPENAI_API_KEY,
-OPENAI_MODEL and opt-in are required. No model is silently selected, no paid
-service purchased and no live test call performed. Credentials are absent; live
-access, model-specific schema support and latency are unverified. Missing keys
+OPENAI_MODEL and opt-in are required. The operator chooses the model and manages
+its provider account. Live access, model-specific schema support and latency
+have not been verified. Missing keys
 return MODEL NOT_CONFIGURED with interpretation unavailable. Provider failure
 retains evidence with sanitized UNAVAILABLE; rejected IDs return
 REJECTED_UNGROUNDED_OUTPUT.
@@ -88,8 +88,8 @@ and final ID selection is validated locally.
 
 ## Storage and verification
 
-No table, migration, runtime service or third-party dependency added. Memos stay
-in browser memory until Phase 7 report snapshots. Logs omit questions, evidence,
+Unsaved memos stay in browser memory. [Report snapshots](research-workflow.md)
+persist a separately captured evidence brief without calling the model. Logs omit questions, evidence,
 credentials and provider response bodies. Deterministic unit/provider fixtures
 cover missing/stale/future/conflicting data, injection, malformed/oversized/
 incomplete/HTTP/network/rate-limit responses, forged IDs and cancellation. Real

@@ -1,46 +1,56 @@
 # Reliability
 
-Phase 0 establishes process liveness, database readiness, a worker heartbeat,
-bounded database pools, explicit provider configuration state, graceful shutdown,
-container restart policies, health checks, memory limits, and rotating Docker logs.
+`GET /health` reports process liveness and dependency states.
+`GET /health?ready=1` returns 503 until PostgreSQL and a worker heartbeat are
+ready. Provider connectivity is reported separately. Configuration and database
+errors are sanitized before reaching clients.
 
-`GET /health` reports liveness and dependency states. `GET /health?ready=1`
-returns 503 until both PostgreSQL and a worker heartbeat are ready. Neither route
-claims market providers are connected. Invalid environment values return a
-sanitized configuration error. Database errors are reported as `UNAVAILABLE`.
+## Process lifecycle
 
-The worker migrates before boot in Compose, waits for PostgreSQL health, upserts
-one heartbeat every five seconds without overlapping runs, and removes its own
-instance on SIGTERM/SIGINT. A heartbeat older than 30 seconds is stale. Database
-connections are bounded to two per application, with connect/query time limits.
-No raw credentials or database errors are returned to clients.
+The worker writes a heartbeat every five seconds without overlapping runs.
+A heartbeat older than 30 seconds is stale. Application database pools allow two
+connections each, with connection and query time limits.
 
-Shutdown closes the worker's health listener, aborts provider loops and cancels
-queued/active ingestion connections before awaiting tasks. Unfinished transactions
-roll back. A separate bounded cleanup connection removes only this instance's
-heartbeat; failed cleanup is explicitly logged and the heartbeat ages out. The
-eight-second process deadline and ten-second Compose grace period are unchanged.
+Shutdown closes the health listener, aborts provider loops and cancels ingestion
+connections before awaiting tasks. Unfinished transactions roll back. A separate
+cleanup connection removes only the stopping instance's heartbeat; failed cleanup
+is logged and the heartbeat ages out. The process deadline is eight seconds,
+within Compose's ten-second grace period.
 
-Phase 1 runs one combined ticker/closed-1m stream. Silent streams are stale after
-45 seconds and reconnect with jittered exponential backoff, capped at 60 seconds.
-Connections rotate before the 24-hour provider limit. REST timeout is eight
-seconds; responses are bounded to 4 MiB and socket messages to 64 KiB. Latest
-prices flush every five seconds; closed-bar buffering is capped at 1,000 rows.
-The default universe is 12 markets, configurable to at most 30. Funding/OI has
-an independent five-minute schedule and at least 60-second failure backoff.
-Spot observations older than 90 seconds are stale; funding/OI uses ten minutes.
-Provider failure preserves the last successful observation.
+Development Compose runs migrations before worker startup. Production runs
+administrator migrations explicitly and gives the long-running services limited
+database roles. See [deployment](deployment.md).
 
-Active hourly retention: 1m candles for 30 days, 5m for 180 days, 1h for two years,
-daily candles permanently, funding/OI for one year, provider-run logs for 14 days.
-Deletes are capped at 5,000 records per table/interval per run. Feature/signal
-retention for 180 days arrives with those tables. Target database size is below
-8 GB. Disk warnings at 70/80%
-and protective ingestion action at 90% are now implemented in Phase 8.
+## Ingestion and freshness
 
-Phase 8 adds seven daily, four weekly and three monthly backup buckets, an archive
-budget, daily host timer and disposable restore verification. Off-host storage and
-a clean-host restore remain required before production. See production-operations.md
-and disaster-recovery.md. Phase 0's local configuration is retained for development;
-secured production uses explicit administrator migrations and limited runtime
-roles instead of migration privileges in the long-running worker.
+One combined Binance connection carries tickers and closed one-minute candles.
+Silent streams become stale after 45 seconds and reconnect with jittered
+exponential backoff capped at 60 seconds. Connections rotate before the
+provider's 24-hour limit. REST requests time out after eight seconds and allow
+at most 4 MiB per response; socket messages allow 64 KiB.
+
+Latest prices flush every five seconds. The closed-bar buffer holds at most
+1,000 rows. The default universe has twelve markets, configurable to thirty.
+Funding and open interest use an independent five-minute schedule with at least
+sixty seconds between failed attempts.
+
+Spot observations older than ninety seconds are stale; funding and open interest
+use ten minutes. Quote validation permits up to five seconds of provider clock
+skew; the analyst excludes future evidence. Failed requests preserve the last
+successful observation. [Data provenance](data-provenance.md) explains how
+source timestamps and collection time remain distinct.
+
+## Retention and recovery
+
+Hourly cleanup retains minute candles for thirty days, five-minute candles for
+180 days, hourly candles for two years and daily candles permanently. Funding
+and open interest retain one year, provider-run logs fourteen days and derived
+features/signals 180 days. Cleanup deletes at most 5,000 records per
+table/interval per run and continues without provider credentials.
+
+Filesystem and database thresholds protect ingestion while cleanup remains
+active. Daily PostgreSQL backups rotate within an archive budget, and restore
+verification uses a disposable database. See [operations](operations.md) for
+thresholds, retention policies, monitoring and backup commands;
+[disaster recovery](disaster-recovery.md) covers restoring service. Off-host
+backup delivery and clean-host recovery still need deployment-specific verification.

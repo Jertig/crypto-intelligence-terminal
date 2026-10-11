@@ -1,45 +1,58 @@
-# Deployment
+# Production deployment
 
-Production hardening is prepared and locally verified separately from deployment.
-No VPS deployment has been authorized or performed. `compose.yaml` remains the
-loopback development preview; `compose.production.yaml` provides secured HTTPS,
-restricted roles, storage protection and prebuilt images. Read the
-[operations/security model](production-operations.md) and
-[recovery workflow](disaster-recovery.md) before go-live.
+`compose.production.yaml` runs prebuilt images with authenticated HTTPS,
+restricted database roles, storage protection and persistent volumes.
+`compose.yaml` is the loopback development stack; see
+[local setup](development.md) for development and integration tests.
 
-Target: Ubuntu, two vCPU, 2 GB RAM, 40 GB disk. Runtime services: `web`, `worker`,
-`postgres`, and `caddy`. The database must remain internal. Runtime builds should
-be prepared on a capable workstation or CI rather than assumed feasible on this
-small VPS.
+The supplied host-service examples use Ubuntu and systemd. The
+[reference profile](reference-profile.md) records the default resource budget and
+local measurements; it is not a universal hardware requirement or a VPS benchmark.
+Review [operations](operations.md) and [recovery](disaster-recovery.md) before deployment.
 
-## Production preparation
+## Prerequisites
 
-Use Ubuntu with Docker Engine/Compose >=2.24.4, Node 24 and Git for host operations and a
-dedicated trusted operator account. Secure SSH/firewall and configure bounded
-journald. Publish only TCP 80/443 through Caddy; do not expose PostgreSQL or bind
-the development database override publicly. Domain DNS must point to the target
-before public automatic HTTPS can work. A 1 GiB emergency swap file may soften
-transient pressure; it is not usable application capacity or a substitute for caps.
+Use Docker Engine with Compose >=2.24.4, Node.js 24 and Git for host operations.
+Create a trusted operations account, secure SSH/firewall access and bound host
+journal storage. Publish TCP 80/443 through Caddy; keep PostgreSQL internal.
+Point the chosen domain's DNS to the host before requesting public HTTPS.
 
-Verify NTP/time synchronization on the host and compare provider clocks before
-go-live. Future source timestamps are withheld from eligible analysis and labeled
-stale; they must never be clamped to local collection time to manufacture freshness.
+Verify host time synchronization and compare provider clocks. Market quotes allow
+five seconds of skew; analyst facts exclude future observations. Preserve source
+timestamps instead of clamping them to the collection clock.
 
-Build images on a workstation/CI, inspect their immutable IDs, and transfer a
-verified `docker save` archive or use digest-pinned registry images. Load the
-archive on the VPS. Do not build or accumulate build caches there. Keep a previous
-release for rollback; remove only operator-reviewed obsolete project images.
-Pinned base-image updates need dependency, container and recovery QA.
+Build the four images on a development machine or CI:
 
-Copy `.env.example` to ignored `.env.production`, chmod 0600, and fill:
-POSTGRES_PASSWORD, POSTGRES_WEB_PASSWORD and POSTGRES_WORKER_PASSWORD (distinct
-32–128-character URL-safe random values); WEB_IMAGE, WORKER_IMAGE, POSTGRES_IMAGE and CADDY_IMAGE (immutable
-sha256 IDs or registry digests); APP_ORIGIN (exact https://domain); ACCESS_USER;
-ACCESS_HASH (bcrypt cost 12–14). Generate the gateway hash with `caddy hash-password`
-using stdin, not a command-line plaintext password. Quote the hash value in the
-environment file to preserve its dollar signs. Optional provider keys stay blank
-when absent; AI remains disabled without explicit enablement/key/model. No runtime
-service receives the entire environment file.
+```sh
+docker compose build worker
+docker compose build web
+docker compose build postgres
+docker compose build caddy
+```
+
+Inspect their immutable image IDs, then transfer a verified `docker save` archive
+or publish digest-pinned registry images. Load the images on the runtime host and
+keep the previous release for rollback. Avoid accumulating build caches on a
+small host. Base-image updates need dependency and container/recovery checks.
+
+## Configuration
+
+Copy `.env.example` to ignored `.env.production` and set file mode 0600.
+Configure:
+
+| Setting                                                                  | Value                                               |
+| ------------------------------------------------------------------------ | --------------------------------------------------- |
+| `POSTGRES_PASSWORD`, `POSTGRES_WEB_PASSWORD`, `POSTGRES_WORKER_PASSWORD` | Distinct 32–128-character URL-safe random passwords |
+| `WEB_IMAGE`, `WORKER_IMAGE`, `POSTGRES_IMAGE`, `CADDY_IMAGE`             | Immutable sha256 image IDs or registry digests      |
+| `APP_ORIGIN`                                                             | Exact public HTTPS origin                           |
+| `ACCESS_USER`, `ACCESS_HASH`                                             | Gateway identity and bcrypt hash, cost 12–14        |
+
+Generate the gateway hash with `caddy hash-password` using stdin, not a plaintext
+command-line argument. Quote the hash in the environment file to preserve dollar
+signs. Leave optional provider settings blank when unused; model calls require
+explicit enablement, key and model. Each service receives only its needed values.
+
+## Start and update
 
 ```sh
 node infra/ops/terminal.mjs validate
@@ -50,103 +63,35 @@ node infra/ops/terminal.mjs backup
 node infra/ops/terminal.mjs verify-restore
 ```
 
-Initialize starts PostgreSQL, runs administrator migrations in a one-off worker
-container, then reapplies limited runtime grants. The permanent worker runs only
-its runtime process. Repeat initialize before starting a new schema release;
-never run backward migrations or rewrite migration history. Review a backup and
-forward-schema compatibility before rolling images back.
+`initialize` starts PostgreSQL, runs administrator migrations in a one-off worker
+container and reapplies runtime grants. Repeat it before starting a schema update.
+The permanent worker does not have migration privileges. Review a backup and
+forward-schema compatibility before rolling images back; do not rewrite migrations.
 
-Install the supplied backup timer only after adjusting its directory/user and
-testing the commands as that account. Configure off-host transfer and verify a
-clean-host restore. Public TLS, firewall, actual VPS resource behavior and remote
-recovery remain go-live checks requiring the operator's domain/host/access details.
+Install the [backup service and timer](operations.md#backup-automation) after
+adjusting their account/path and testing commands as that account. Configure an
+independent off-host destination and verify a clean-host restore.
 
-## Isolated production-like QA
+Public TLS issuance, firewall behavior, sustained host capacity, timer delivery
+and off-host recovery still require deployment validation. Local container tests
+have passed; no live VPS deployment or off-host recovery is claimed.
+
+## Isolated container verification
+
+Build the four images above, then run:
 
 ```sh
-docker compose build worker
-docker compose build web
-docker compose build postgres
-docker compose build caddy
 node infra/ops/verify-production.mjs
 ```
 
-This creates/reuses only `terminal-production-qa`, separate from development data,
-with generated ignored credentials and HTTPS on localhost:18443. QA operations,
-archives and locks use `data/operations-qa`; production uses `data/operations`.
-The override also binds only the separate QA PostgreSQL volume. The explicit QA
-override publishes loopback ports only and uses Caddy's internal CA. The test client
-accepts only this known local certificate; production clients use normal trusted
-public TLS. It tests authentication, Origin rules, database permissions, synthetic
-storage-protection states (test-only), persistent operator procedures, frozen
-unavailable-evidence reports, shutdown/outage/recovery and a real dump/restore.
-Live ingestion/model calls are disabled. Result: `.work/production-verification.json`.
-No persistent volume is removed. Do not use this override for public deployment.
+The verifier creates/reuses `terminal-production-qa` with separate database and
+gateway volumes, generated ignored credentials and HTTPS on localhost:18443.
+Backups/status/locks use `data/operations-qa`; production uses `data/operations`.
+The QA override publishes only loopback ports and uses Caddy's internal CA.
+Only the test client accepts that local certificate.
 
-## Local PostgreSQL
-
-Copy `.env.example` to the ignored `.env`. Generate a local password and set
-`POSTGRES_PASSWORD`. Set `DATABASE_URL` to a PostgreSQL connection URI using that
-password, database/user `terminal`, and host `127.0.0.1:54321`. The example file
-intentionally contains no values. Do not reuse local credentials in production.
-
-```sh
-docker compose -f compose.yaml -f infra/docker/compose.local.yaml up -d postgres --wait
-pnpm db:migrate
-pnpm db:check
-```
-
-The override exposes PostgreSQL on loopback only for host-side checks. Omit the
-override for the full local application stack; PostgreSQL then has no host port.
-The named volume persists data across container recreation. `docker compose down`
-does not delete it. Do not use `down -v` unless explicitly discarding local data.
-
-Migration generation is credential-free. Migration execution requires a valid
-database URI. Schema changes must be committed as SQL and Drizzle metadata.
-
-## Full local stack
-
-```sh
-docker compose build worker
-docker compose build web
-docker compose build postgres
-docker compose build caddy
-docker compose up -d --wait
-```
-
-Open `http://127.0.0.1:8080`. Readiness is at `/health?ready=1`. Only Caddy is
-exposed, on loopback. Worker migrations run before its heartbeat service starts;
-web waits for worker readiness. Images run application code as a non-root user.
-Compose caps runtime memory at 1,300 MB in total and rotates each service's logs
-at three 10 MB files. This is a local foundation configuration, not a secured
-production deployment.
-
-For host development, use the database override, run `pnpm db:migrate`,
-`pnpm dev:worker`, and `pnpm dev` in separate terminals. The latter commands read
-the ignored root `.env`; production image builds require no credentials.
-
-## Integration tests
-
-The integration suite refuses any database except `terminal_test` on
-`127.0.0.1` or `localhost`. It drops and recreates the test schemas. Never point it
-at a database you intend to keep.
-
-Set `TEST_DATABASE_URL` in `.env` using the same local password and loopback port,
-but database name `terminal_test`. Create the database once:
-
-```sh
-docker compose -f compose.yaml -f infra/docker/compose.local.yaml up -d postgres --wait
-docker compose exec -T postgres psql -U terminal -d terminal -c "CREATE DATABASE terminal_test"
-pnpm test:integration
-```
-
-When returning to the internal-only full stack, run the base Compose file without
-the override:
-
-```sh
-docker compose up -d --wait
-```
-
-This recreates PostgreSQL without its loopback host port and retains its named
-volume. A local password is generated per environment; CI generates and masks
-an ephemeral password per run. Credentials never enter build arguments or images.
+Checks cover authentication, Origin rules, database permissions, test-only storage
+protection, record persistence, shutdown/outage/recovery and a real dump/restore.
+Live ingestion and model calls are disabled. Results are written to
+`.work/production-verification.json`. Persistent volumes are retained. Do not
+use the QA override for a public deployment.

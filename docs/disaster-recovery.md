@@ -1,7 +1,7 @@
 # Disaster recovery
 
-Same-disk backups are not disaster recovery. Public deployment remains pending:
-no remote host, SSH destination, off-host storage or public domain has been used.
+Same-disk backups are not disaster recovery. The application verifies local dump
+restoration; off-host delivery and a clean-host restore require separate validation.
 
 ## Verify locally
 
@@ -28,8 +28,8 @@ each completed dump and its SHA-256 sidecar over authenticated SSH/SFTP, with
 restricted destination permissions. Backups contain private notes and research;
 encrypt them at rest using the destination's secured storage or an operator-managed
 encryption tool. Keep recovery credentials and decryption material outside the
-VPS. Do not put them in this repository or application environment. No paid service
-is required or purchased. Configure independent off-host retention and monitor
+runtime host. Do not put them in this repository or application environment.
+Configure independent off-host retention and monitor
 delivery; local backup success is not delivery success. Perform a clean-host restore
 from that copy before calling the deployment disaster-recoverable.
 
@@ -51,7 +51,7 @@ from that copy before calling the deployment disaster-recoverable.
    current storage status, worker heartbeat, unavailable/stale provider states and
    safe research writes. Confirm live adapters can reconnect without changing
    historical provenance. Old observations remain old.
-6. Change DNS/access only after validation and explicit deployment authorization.
+6. Change DNS/access only after validating the recovered deployment.
    Keep the former volume until the operator has verified the new deployment and
    another off-host backup. Document recovery-point loss and measured recovery time.
 
