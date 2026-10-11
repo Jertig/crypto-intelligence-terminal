@@ -659,7 +659,7 @@ export function scoreNarrative(
         : null,
       availableAssetWeight: totalWeight ? weight / totalWeight : 0,
       reason: !definition.feature
-        ? 'Provider-derived evidence unavailable in this phase'
+        ? 'Provider-derived evidence is not connected'
         : weight
           ? 'Versioned weighted research component; descriptive, uncalibrated'
           : 'Missing, stale or insufficient feature coverage',

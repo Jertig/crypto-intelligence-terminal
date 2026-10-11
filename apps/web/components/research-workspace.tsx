@@ -1183,8 +1183,8 @@ export function ResearchInspector() {
           no email, trading, signing or private keys.
         </p>
         <p>
-          Shared single-operator records. Public access requires the production
-          access controls documented in Phase 8.
+          Records are shared by one operator. Public access requires the
+          authenticated HTTPS gateway.
         </p>
       </div>
     </aside>

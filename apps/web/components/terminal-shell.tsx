@@ -34,7 +34,7 @@ import {
   filterDestinations,
   findWorkspace,
   navigation,
-  plannedProviders,
+  providerCatalog,
   workspaceHref,
 } from '../lib/navigation';
 
@@ -256,13 +256,7 @@ function CommandPalette({
           >
             <Icon name={item.icon} />
             <span>{item.label}</span>
-            <small>
-              {'phase' in item &&
-              typeof item.phase === 'number' &&
-              item.phase > 7
-                ? 'Not available yet'
-                : 'Open'}
-            </small>
+            <small>Open</small>
           </button>
         ))}
         {!results.length && (
@@ -465,7 +459,7 @@ function SystemWorkspace({ workspace }: { workspace: string }) {
                 </tr>
               </thead>
               <tbody>
-                {plannedProviders.map((provider) => {
+                {providerCatalog.map((provider) => {
                   const prefix =
                     provider.name === 'DEX Screener'
                       ? 'dexscreener'
@@ -773,7 +767,7 @@ export function TerminalShell({
           ))}
           <div className="sidebar-footer">
             <span className="status-dot" />
-            Research terminal · Phase 8
+            Research terminal
           </div>
         </nav>
         <main id="workspace" className="workspace" tabIndex={-1}>
@@ -837,9 +831,8 @@ export function TerminalShell({
                   title="This workspace is not available yet"
                   icon={entry?.icon ?? 'document'}
                 >
-                  {entry?.label} requires the data and research capabilities
-                  requires additional verified provider evidence. No placeholder
-                  observations are shown.
+                  {entry?.label} requires additional verified provider evidence.
+                  No placeholder observations are shown.
                 </Empty>
                 <div className="panel-foot">
                   <Link href="/data-status">Inspect connected sources ↗</Link>
