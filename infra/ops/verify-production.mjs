@@ -282,6 +282,103 @@ async function run() {
           m.source.replaceAll('\\', '/').endsWith('/data/operations'),
       ),
   );
+  const publicFile = '.work/public-ip-qa.env';
+  const publicOrigin = 'https://203.0.113.10:18443';
+  await writeFile(
+    publicFile,
+    Object.entries({
+      ...config,
+      APP_ORIGIN: publicOrigin,
+      PUBLIC_IP: '203.0.113.10',
+    })
+      .map(([k, v]) => `${k}='${v}'`)
+      .join('\n') + '\n',
+    { mode: 0o600 },
+  );
+  execFileSync(
+    process.execPath,
+    [cli, 'validate', '--public-ip', '--env-file', publicFile],
+    { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+  );
+  const publicModel = JSON.parse(
+    docker([
+      'compose',
+      '--env-file',
+      publicFile,
+      '-f',
+      'compose.production.yaml',
+      '-f',
+      'infra/docker/compose.production-public-ip.yaml',
+      '-p',
+      'terminal-production',
+      'config',
+      '--format',
+      'json',
+    ]),
+  );
+  const published = publicModel.services.caddy.ports;
+  check(
+    'Public-IP profile exposes only authenticated Caddy TCP 18443',
+    published.length === 1 &&
+      published[0].host_ip === '0.0.0.0' &&
+      String(published[0].published) === '18443' &&
+      published[0].target === 18443 &&
+      published[0].protocol === 'tcp' &&
+      ['web', 'worker', 'postgres'].every(
+        (name) => !publicModel.services[name].ports?.length,
+      ) &&
+      publicModel.services.caddy.environment.ACCESS_HASH.replaceAll(
+        '$$',
+        '$',
+      ) === config.ACCESS_HASH &&
+      publicModel.services.caddy.environment.TLS_PROFILE === 'local_tls' &&
+      publicModel.services.caddy.environment.TLS_SERVER_NAME ===
+        '203.0.113.10' &&
+      publicModel.services.web.environment.APP_ORIGIN === publicOrigin,
+  );
+  check(
+    'Public-IP profile preserves production persistence and restart policies',
+    publicModel.volumes['postgres-data'].name ===
+      privateModel.volumes['postgres-data'].name &&
+      JSON.stringify(publicModel.services.worker.volumes) ===
+        JSON.stringify(privateModel.services.worker.volumes) &&
+      Object.values(publicModel.services).every(
+        (service) => service.restart === 'unless-stopped',
+      ),
+  );
+  const adapted = JSON.parse(
+    docker([
+      'run',
+      '--rm',
+      '-e',
+      `APP_ORIGIN=${publicOrigin}`,
+      '-e',
+      `ACCESS_USER=${config.ACCESS_USER}`,
+      '-e',
+      `ACCESS_HASH=${config.ACCESS_HASH}`,
+      '-e',
+      'TLS_PROFILE=local_tls',
+      '-e',
+      'TLS_SERVER_NAME=203.0.113.10',
+      '-v',
+      `${root}/infra/caddy/Caddyfile.production:/etc/caddy/Caddyfile:ro`,
+      config.CADDY_IMAGE,
+      'caddy',
+      'adapt',
+      '--config',
+      '/etc/caddy/Caddyfile',
+      '--adapter',
+      'caddyfile',
+    ]),
+  );
+  check(
+    'IP TLS has a certificate selector for clients without SNI',
+    Object.values(adapted.apps.http.servers).some((server) =>
+      server.tls_connection_policies?.some(
+        (policy) => policy.default_sni === '203.0.113.10',
+      ),
+    ),
+  );
   dc(['stop', 'caddy', 'web', 'worker']);
   command('initialize');
   const start = performance.now();
