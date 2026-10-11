@@ -1,8 +1,16 @@
-# Dependency security
+# Security
+
+Production access uses an authenticated HTTPS gateway, restricted database roles
+and server-only credentials. Request schemas, same-origin checks and per-process
+limits protect mutation and model endpoints. The terminal is a single-operator
+application, not a multi-user permission system; read the
+[access and host trust model](operations.md#personal-access-model).
+
+## Dependency policy
 
 Production dependencies are audited separately from development tooling.
 
-`braces@3.0.3`, reached through Next's lint plugin, has no upstream patched
+At the 11 October 2026 review, `braces@3.0.3` (Next's lint dependency) had no upstream patched
 release for [CVE-2026-93687](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm).
 The pinned pnpm patch adds a fixed depth guard of 128 to parsing and recursive
 compile, expand, and stringify walkers. Regression tests cover ordinary patterns,
@@ -24,13 +32,13 @@ the next major line.
 
 ## Runtime image review
 
-Phase 8 scans the effective filesystem of all four runtime images with Trivy
-v0.75.0 (official release archive verified against its SHA-256 checksums). The
+The 11 October 2026 review scanned all four runtime filesystems with Trivy
+v0.75.0, verified against the official release archive checksums. The
 original Node image bundled vulnerable npm/Corepack dependencies that are not
 needed by the compiled applications. Runtime stages remove these tools and install
 Alpine's fixed `zlib=1.3.2-r1`; dependency installation remains in build stages.
 
-The current official Caddy binary was compiled with an older Go patch and
+The reviewed upstream Caddy binary was compiled with an older Go patch and
 `golang.org/x/net`. The gateway retains Caddy v2.11.7's standard modules, compiled
 with pinned Go 1.27.2 and x/net v0.60.0. PostgreSQL 16 remains the official pinned
 database image; only its `gosu` v1.19 privilege helper is rebuilt with the same Go

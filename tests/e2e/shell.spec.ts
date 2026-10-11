@@ -30,7 +30,7 @@ test('ivory shell renders honest empty states without browser errors', async ({
   expect(errors).toEqual([]);
 });
 
-test('workspace navigation opens the market core and discloses later planned functionality', async ({
+test('workspace navigation opens research tools and discloses unavailable sources', async ({
   page,
 }) => {
   await page.goto('/');

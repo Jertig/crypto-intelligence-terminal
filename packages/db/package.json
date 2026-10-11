@@ -30,5 +30,6 @@
   "devDependencies": {
     "drizzle-kit": "0.31.11",
     "tsx": "4.23.15"
-  }
+  },
+  "description": "PostgreSQL schema, migrations and typed research repositories."
 }

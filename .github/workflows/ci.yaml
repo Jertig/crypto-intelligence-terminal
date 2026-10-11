@@ -24,7 +24,7 @@ jobs:
       matrix:
         include:
           - name: Lint and format
-            command: pnpm format:check && pnpm lint
+            command: pnpm docs:check && pnpm format:check && pnpm lint
           - name: Typecheck
             command: pnpm typecheck
           - name: Unit tests

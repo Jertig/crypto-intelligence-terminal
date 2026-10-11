@@ -23,10 +23,10 @@
     "test:integration": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --project integration",
     "test:e2e": "playwright test",
     "build": "pnpm --filter @terminal/worker build && pnpm --filter @terminal/web build",
-    "qa": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build"
+    "qa": "pnpm docs:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build",
+    "docs:check": "node scripts/check-doc-links.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.5",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -39,5 +39,10 @@
     "braces": "3.0.3",
     "@playwright/test": "1.64.0",
     "tsx": "4.23.15"
+  },
+  "description": "Evidence-first crypto research terminal for market, on-chain, risk and macro analysis.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jertig/crypto-intelligence-terminal.git"
   }
 }

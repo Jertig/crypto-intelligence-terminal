@@ -410,9 +410,9 @@ export function WalletWorkspace() {
           </table>
         </div>
         <p className="provenance-note">
-          Conceptual specification weights require outcome backtesting and
-          calibration before any meaningful score. No profitability, win-rate,
-          early-entry, or insider claims are made.
+          Reputation weights require outcome backtesting and calibration before
+          any meaningful score. No profitability, win-rate, early-entry, or
+          insider claims are made.
         </p>
       </section>
     </div>

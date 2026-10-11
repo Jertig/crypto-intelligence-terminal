@@ -51,7 +51,7 @@ conditions, not calibrated forecasts or causal conclusions.
 
 ## Storage and concurrency
 
-Eight additive typed tables preserve the prior schema and methodology. Limits:
+Eight typed tables store research records. Limits:
 20 lists × 30 tickers, 100 notes × 3,000 characters, 50 saved queries, 50 views,
 50 reports (120,000-byte capture envelope; 128 KiB database bound), 20 rules,
 and 1,000 notifications. List counts and mutations share a transaction-scoped
@@ -76,7 +76,7 @@ Strict discriminated inputs, allowlisted parameterized queries, 16 KiB request
 bodies, same-Origin/Host validation, one concurrent mutation and 30 attempts per
 minute/process. Errors omit database details, note bodies and credentials. Rate
 limits reset on restart; they are not a distributed abuse/spend guarantee.
-Local Compose is loopback-only. Shared single-operator access needs Phase 8's
+Local Compose is loopback-only. Shared single-operator access requires the
 authenticated HTTPS gateway before public exposure; there is no multi-user
 ownership or fine-grained account isolation. Backup retained reports before their
 expiry if longer history is required. No external messaging service is configured.

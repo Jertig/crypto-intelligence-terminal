@@ -3,10 +3,11 @@ node_modules
 dist
 coverage
 pnpm-lock.yaml
-docs/specification
 packages/db/migrations/meta
 playwright-report
 test-results
 .work
 patches
 **/next-env.d.ts
+.codex
+**/AGENTS.md

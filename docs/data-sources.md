@@ -1,50 +1,63 @@
 # Data sources
 
-Binance public spot REST and streams are connected in Phase 1 without keys.
-Futures is independently unavailable when the public host times out. No fixtures
-or fabricated values are used in the production application.
+The worker collects market, token, wallet and macro observations. The optional
+model adapter runs in the web process only after an analyst submission.
+Credentials are server-side; provider configuration is independent of runtime health.
 
-| Provider     | Purpose                                      | Current capability                                         |
-| ------------ | -------------------------------------------- | ---------------------------------------------------------- |
-| Binance      | Spot, derivatives, candles, selected streams | Spot observed; futures adapter tested, locally unavailable |
-| CoinGecko    | Global identity, metadata, categories        | Not connected                                              |
-| DEX Screener | Selected base pools, liquidity, volume       | Bounded public adapter; 15-minute polling                  |
-| Helius       | Explicitly tracked Solana wallets            | Adapter tested; credential and wallet list absent          |
-| DefiLlama    | Selected protocol/chain metrics              | Not connected                                              |
-| FRED         | Macro observations and revisions             | Bounded adapter tested; credential absent                  |
-| GoPlus       | Optional authority and holder evidence       | Bounded public adapter; hourly polling                     |
+## Public endpoints
 
-Adapters validate before core logic. Tests cover malformed, empty, rate-limited,
-timed-out, stale and disconnected responses without live API dependencies.
-Provider source timestamps survive persistence and query DTOs. Spot and
-funding/OI have independent freshness windows. Missing data stays unavailable.
-Cached data ages during query failure. Production keys remain server-side only.
+| Provider     | Data                                                    | Configuration and verification                                                                                |
+| ------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Binance      | Spot tickers, closed candles, funding and open interest | Spot REST/stream exercised live. Futures adapter tested; requests timed out in local verification.            |
+| DEX Screener | Selected pools, liquidity and volume                    | Public observations exercised live for the default wrapped SOL/USDC mints.                                    |
+| GoPlus       | Contract capabilities and supported holder evidence     | Public observations exercised live; unsupported fields stay absent. Optional `GOPLUS_API_KEY` is worker-only. |
 
-DEX/GoPlus return aggregates without an upstream observation timestamp. We retain
-and label collection time explicitly. See [token scope and source documentation](token-risk.md).
+`MARKET_SYMBOLS` selects at most 30 USDT spot symbols; the default universe has
+twelve. `MARKET_INGESTION_ENABLED=false` disables public market collection.
+`TOKEN_UNIVERSE` selects at most eight `chain:address` identities;
+`TOKEN_INGESTION_ENABLED` and `GOPLUS_ENABLED` control token/security collection.
+See [market data](market-core.md) and [token risk](token-risk.md) for identity,
+units, warm-up and freshness rules.
 
-The optional OpenAI analyst adapter is separate from market data. It is disabled
-by default, requires explicit key/model/enablement, and has not been tested live.
-Its bounded tools query existing terminal evidence; no AI-generated facts are
-stored as provider observations. See [privacy and grounding](ai-analyst.md).
+## Optional credentials
 
-## Operational provider review
+| Integration | Settings                                               | Verification                                                                                       |
+| ----------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Helius      | `HELIUS_API_KEY`, `TRACKED_WALLETS`                    | Adapter and persistence tested with fixtures; no live credential/address configuration verified.   |
+| FRED        | `FRED_API_KEY`                                         | Adapter, observed revisions and retention tested with fixtures; live ingestion unverified.         |
+| OpenAI      | `AI_ANALYST_ENABLED`, `OPENAI_API_KEY`, `OPENAI_MODEL` | Disabled by default; structured evidence briefs work without a model. No live model call verified. |
 
-Every connected adapter uses fixed HTTPS origins, rejects redirects, validates
-bounded responses, and preserves source/collection times. Credentials belong only
-to the worker, except the optional model key which belongs only to the web server.
-No provider credential appears in client configuration or published screenshots.
+Wallet configuration is a JSON list of up to eight addresses with optional labels.
+FRED selects twelve curated series. Events are separately imported, sourced
+records; a FRED key does not provide an automatic news/release calendar.
+The model is an interpretation service, not a source of market observations.
+See [wallets](wallet-intelligence.md), [events/macro](events-macro.md) and
+[analyst privacy](ai-analyst.md#optional-model-and-privacy).
 
-| Adapter      | Request and storage bounds                                                                                                                                  | Failure behavior                                                                                                                                  |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Binance      | Default 12 spot markets, maximum 30; combined stream and serial REST; closed bars with retention                                                            | Spot and futures have independent health/freshness; no substituted funding/OI                                                                     |
-| DEX Screener | Eight selected tokens/four chains, at most three pools per token, 15-minute polling                                                                         | Missing pools/fields remain unavailable; collection time is explicit                                                                              |
-| GoPlus       | Optional hourly selected-contract evidence                                                                                                                  | Unsupported fields stay absent; no inferred authority/ownership                                                                                   |
-| Helius       | Eight explicitly tracked wallets; at most two pages of 50; four durable attempted calls per UTC day; eight-second/2 MiB request limit                       | Empty configuration/absent key is unavailable; failed attempts still consume budget; no full-chain indexing                                       |
-| FRED         | Twelve series, hourly serial requests; 2,000 observations/response; eight-second/2 MiB limit; five years and twelve changed versions per period date        | No key means unavailable; retention still runs; revisions are observed versions, not reconstructed release history                                |
-| AI adapter   | Explicit submission only; seven fixed read-only tools, 24 rows/tool; 30-second/256 KiB response limit; eight function calls; output bounded to 1,500 tokens | No key/model leaves an honest structured evidence brief; missing/conflicting/stale evidence is excluded or labeled; no trading or provider writes |
+## Not connected
 
-Public access observed on this workstation is not a free-tier availability
-guarantee. Respect provider terms and current quotas before enabling credentials.
-Global identity/protocol metrics, exact TOTAL3/DXY/gold, full CEX/DEX flow and news
-remain unavailable. Data Status is the source of current runtime health.
+CoinGecko and DefiLlama appear in the source catalog but have no active adapters.
+Global identity/market-cap metadata, exact TOTAL3/DXY/gold, dedicated news and
+CEX/DEX-flow feeds are not available. The News route displays sourced events.
+Manual events require their own citations and are not prepopulated.
+
+## Request limits and failure behavior
+
+| Adapter      | Limits                                                                                                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Binance      | One combined spot stream; serial REST; default twelve markets, maximum thirty                                                           |
+| DEX Screener | Up to eight tokens across four supported chains, three selected pools/token, polling every fifteen minutes                              |
+| GoPlus       | Selected-contract evidence hourly                                                                                                       |
+| Helius       | Four attempted requests per UTC day across tracked wallets; up to two pages of fifty/address; eight-second/2 MiB request limits         |
+| FRED         | Twelve serial hourly requests; 2,000 observations/series; eight-second/2 MiB limits; five years and twelve changed versions/period date |
+| Model        | Seven fixed read-only tools, 24 rows/tool; thirty-second/256 KiB response limits; at most eight calls and 1,500 output tokens/call      |
+
+Adapters use fixed HTTPS origins, reject redirects, validate responses and sanitize
+errors. Provider tests cover malformed, empty, rate-limited, timed-out and
+disconnected responses. Source timestamps survive persistence and query projection;
+cached evidence ages during failures. DEX/GoPlus use labeled collection time because
+their aggregates lack a uniform upstream timestamp.
+
+A missing credential is not proof that the remote provider is down. Data Status
+shows the stored health state and configuration error. Public access and quotas
+can vary by region/account; check the provider's current terms before enabling it.

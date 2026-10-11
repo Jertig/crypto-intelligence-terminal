@@ -1,14 +1,15 @@
 # Production operations
 
-Prepared for Ubuntu, 2 vCPU, 2 GB RAM and 40 GB disk. No VPS deployment has been
-performed. Local Docker Desktop measurements and isolated HTTPS checks are not
-VPS capacity measurements or verification of a public certificate.
+The supplied Compose configuration uses a small reference resource budget.
+[Reference profile and measurements](reference-profile.md) explains its scope;
+adjust capacity for the configured sources and observed load. See
+[deployment](deployment.md) for host setup.
 
 ## Four services
 
 Production uses four prebuilt, digest-pinned images: web, worker, PostgreSQL 16 and
 Caddy. Security rebuilds preserve upstream database/gateway behavior while updating
-their binaries; see [dependency security](dependency-security.md). Only Caddy
+their binaries; see [dependency security](security.md). Only Caddy
 publishes TCP 80/443. PostgreSQL, web, worker and the gateway's
 loopback health listener have no public host ports. Caddy persists certificate
 state. Fresh PostgreSQL initializes restricted `terminal_web` and
@@ -18,14 +19,14 @@ URL or schema-creation privilege. Repeat initialize after every schema update.
 
 Runtime memory caps: web 400 MiB, worker 300 MiB, PostgreSQL 500 MiB, Caddy
 100 MiB; total 1,300 MiB, leaving approximately 748 MiB on a 2 GiB machine for the
-OS and Docker. CPU caps total two cores. V8 old-space limits are 256/160 MiB for
+OS and Docker in that reference profile. CPU caps total two cores. V8 old-space limits are 256/160 MiB for
 web/worker. Application roots are read-only and non-root, with bounded temporary
 filesystems and dropped capabilities. PostgreSQL has 20 connections, 128 MiB
 shared buffers, 4 MiB work memory, 64 MiB maintenance memory and a 128 MiB
 per-process temporary-file limit. Its 512 MiB WAL target is not a hard disk cap.
 Pools remain two connections per application with original query/connect limits.
 These bounds reduce pressure; they do not prove that every possible configuration
-fits under sustained maximum load. Prepare images off the VPS.
+fits under sustained maximum load. Prepare images away from the runtime host.
 
 ## Personal access model
 
@@ -70,16 +71,16 @@ observations age normally and are never relabeled as new evidence.
 
 The filesystem values describe the mounted filesystem, not project-only use.
 Docker Desktop typically reports its Linux VM disk and does not measure the
-Windows host's 40 GB equivalent. On Ubuntu the mounts must share the intended
-VPS storage. Recheck `df`, volume locations and backup placement before go-live.
+Windows host's physical disk. On Linux the mounts must share the intended
+runtime storage. Recheck `df`, volume locations and backup placement before go-live.
 A minute interval and in-flight bounded batches can overshoot a threshold; leave
 headroom. Retention deletes reclaim reusable PostgreSQL pages, not necessarily
 filesystem bytes. Do not automate VACUUM FULL or delete volumes to relieve pressure.
 Investigate and provide capacity or an operator-planned maintenance window.
 
 Hourly credential-independent maintenance invokes the existing bounded retention
-functions even when ingestion is disabled/protected. The original engines retain
-their idempotent pruning for continuity. Policies remain: 1m candles 30 days; 5m
+functions even when ingestion is disabled/protected. The ingestion engines also perform
+idempotent pruning. Policies: 1m candles 30 days; 5m
 180 days; 1h two years; daily bars permanent; funding/OI one year; ingestion logs
 14 days; features/signals/narratives and token histories 180 days; wallet history
 90 days/500 transactions per address with summaries; macro five years of period
@@ -116,8 +117,8 @@ Backup status is unavailable without a completed dump, and stale/failed after
 Install Node 24, Git and the Docker CLI on the operations host. Copy the supplied
 `infra/backup/terminal-backup.service` and `.timer` to systemd, adjust the project
 directory/user to the secured checkout, and enable the timer. The timer runs daily
-at 02:30 UTC with a short jitter and bounded execution. Its status must be checked;
-no timer has been installed on the user's VPS by this work.
+at 02:30 UTC with a short jitter and bounded execution. Verify its status and
+last successful run after installation.
 
 QA backups/status/locks are isolated under `data/operations-qa`; production uses
 `data/operations`. The isolated verifier never prunes production archives or
@@ -131,14 +132,14 @@ Authenticated `/health` separates liveness from DB/worker status;
 and Data Status expose bounded storage and backup observations. Provider health
 and failure codes remain independent; a missing key does not establish a remote
 outage. Worker heartbeats run every five seconds and expire after 30 seconds.
-The original eight-second worker shutdown and ten-second Compose grace remain.
+Worker shutdown has an eight-second deadline and ten-second Compose grace.
 Systemd's failed timer, stale backup status, protective/unknown storage, missing
 worker heartbeat and provider degradation need operator attention. In-app alerts
 require a running evaluator/browser; they are not an off-site pager.
 
 At warning, review relation sizes, retained row counts, log rotation, archive use
 and image/cache ownership. At urgent, copy and verify archives off-host, address
-unexpected growth and avoid building images on the VPS. At protection, investigate
+unexpected growth and avoid building images on a constrained runtime host. At protection, investigate
 before resuming; do not falsify the status record or relax limits. Backups on the
 same disk are not disaster recovery. Follow [recovery](disaster-recovery.md).
 

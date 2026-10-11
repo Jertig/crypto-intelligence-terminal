@@ -23,5 +23,6 @@
   },
   "dependencies": {
     "zod": "4.6.5"
-  }
+  },
+  "description": "Validated contracts and deterministic research methodologies."
 }

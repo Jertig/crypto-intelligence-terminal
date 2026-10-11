@@ -32,7 +32,7 @@ explicit states. Cached calculated evidence ages after 15 minutes.
 
 ## Curated taxonomy v1
 
-Fifteen categories match the specification. Initial mappings cover four
+Fifteen curated categories organize the taxonomy. Initial mappings cover four
 exchange-scoped assets. ETH allocations: L1 0.8, DeFi 0.2. DOGE, AAVE and LINK
 are respectively Meme, DeFi and Oracle with weight 1. Weights are editorial
 research choices, not measured economic exposures or source claims.
@@ -64,7 +64,7 @@ Missing classified assets remain in the denominator. Features in the future or
 older than 15 minutes do not contribute. Narratives run every 15 minutes and
 show stale after 30 minutes. Source time uses only the selected tag's feature types.
 
-Wallet inflow and protocol activity are unavailable in Phase 2. Their absent
+Wallet inflow and protocol activity inputs are not connected. Their absent
 25% is never replaced by zero or invented observations. Full scores therefore
 remain unavailable. Partial scores are not complete scores or probabilities.
 
@@ -96,7 +96,14 @@ two signals. Queries read active versions; old versions remain auditable.
 No request-time provider fan-out. History expires after 180 days with bounded
 hourly deletion. One version at 12 assets produces 622,080 feature rows;
 at maximum 30, 1,555,200. Compression helps but this is not a size guarantee.
-Phase 8 enforces the final disk budget.
+[Storage protection](operations.md#storage-protection) enforces the database budget.
+
+## Related methods
+
+- [Wallet behavior, reputation and relationships](wallet-intelligence.md)
+- [Events and cross-market statistics](events-macro.md)
+- [Evidence-grounded analysis](ai-analyst.md)
+- [Research records and alert rules](research-workflow.md)
 
 ## Token risk and liquidity
 

@@ -1,4 +1,4 @@
-# Local validation only. HTTPS and production access control belong to Phase 8.
+# Loopback development preview. Use Caddyfile.production for authenticated HTTPS.
 {
   auto_https off
   admin off
