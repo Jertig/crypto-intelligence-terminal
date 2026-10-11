@@ -107,3 +107,7 @@ sourced events or retained history. Wallet relationships are evidence, not proof
 of ownership; statistical associations do not establish causation. Risk and
 reputation methods are uncalibrated. Alerts are in-app, and AI interpretation is
 optional and read-only. There is no trading execution or wallet signing.
+
+## License
+
+[MIT](LICENSE) © 2026 Jeremiah Tigres.
