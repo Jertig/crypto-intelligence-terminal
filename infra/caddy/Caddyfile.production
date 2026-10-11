@@ -1,5 +1,6 @@
 {
   admin off
+  default_sni {$TLS_SERVER_NAME:localhost}
   servers {
     max_header_size 4KiB
     timeouts {

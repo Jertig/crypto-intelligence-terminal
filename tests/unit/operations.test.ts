@@ -160,6 +160,41 @@ describe('bounded production operations', () => {
       validateProduction({ ...config, AI_ANALYST_ENABLED: 'true' }),
     ).toThrow();
   });
+  it('requires an explicit matching IPv4 HTTPS origin for public-IP access', () => {
+    const ip = {
+      ...config,
+      PUBLIC_IP: '203.0.113.10',
+      APP_ORIGIN: 'https://203.0.113.10:18443',
+    };
+    expect(validateProduction(ip, false, false, true)).toBe(true);
+    expect(() => validateProduction(ip)).toThrow();
+    for (const APP_ORIGIN of [
+      'http://203.0.113.10:18443',
+      'https://203.0.113.10',
+      'https://203.0.113.10:443',
+      'https://203.0.113.11:18443',
+      'https://terminal.example.com:18443',
+      'https://[::1]:18443',
+      'https://203.0.113.10:18443/path',
+    ]) {
+      expect(() =>
+        validateProduction({ ...ip, APP_ORIGIN }, false, false, true),
+      ).toThrow();
+    }
+    expect(() =>
+      validateProduction(
+        { ...ip, ACCESS_HASH: 'plaintext' },
+        false,
+        false,
+        true,
+      ),
+    ).toThrow();
+    expect(() =>
+      validateProduction({ ...ip, WEB_IMAGE: 'latest' }, false, false, true),
+    ).toThrow();
+    expect(() => validateProduction(ip, true, false, true)).toThrow();
+    expect(() => validateProduction(ip, false, true, true)).toThrow();
+  });
   it('isolates production-like QA and validates application HTTPS origin server-side', () => {
     const qa = {
       ...config,

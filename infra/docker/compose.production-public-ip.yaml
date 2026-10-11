@@ -1,0 +1,7 @@
+# Direct IPv4 HTTPS with the existing production CA, data and backup paths.
+services:
+  caddy:
+    ports: !override ['0.0.0.0:18443:18443']
+    environment:
+      TLS_PROFILE: local_tls
+      TLS_SERVER_NAME: ${PUBLIC_IP:?IPv4 address matching APP_ORIGIN required}

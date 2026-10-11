@@ -130,3 +130,61 @@ protection, record persistence, shutdown/outage/recovery and a real dump/restore
 Live ingestion and model calls are disabled. Results are written to
 `.work/production-verification.json`. Persistent volumes are retained. Do not
 use the QA override for a public deployment.
+
+## Direct public IPv4 access without a domain
+
+Use this only when direct network access is intended. Preserve the current pinned
+images, production database, Caddy CA volumes and credentials. Set `PUBLIC_IP` to
+the VPS IPv4 address and `APP_ORIGIN=https://<IPv4>:18443` in the protected
+`.env.production`. Use `--public-ip` instead of `--private` for every operations
+command, including the installed backup service. These profiles are mutually
+exclusive. For manual Compose commands use `compose.production.yaml` plus
+`infra/docker/compose.production-public-ip.yaml`, project `terminal-production`.
+
+The profile publishes only Caddy on `0.0.0.0:18443/tcp`; web, worker and PostgreSQL
+remain internal. It retains authenticated HTTPS and the production volumes. Caddy
+issues an IP-subject certificate from its existing internal CA, renews it
+intentionally, and selects the configured IP certificate for clients without SNI.
+Only web and Caddy need recreation when changing the origin/binding; do not rerun
+initialization, regenerate credentials, remove volumes or retag the release.
+
+Public IP certificates are supported by some public CAs, but their ACME HTTP/TLS
+validation requires port 80 or 443. The high-port-only profile therefore explicitly
+uses local trust. Do not open additional ports or fall back to HTTP to avoid trust
+setup. References: [ACME challenges](https://letsencrypt.org/docs/challenge-types/)
+and [Caddy default SNI](https://caddyserver.com/docs/caddyfile/options#default-sni).
+
+Inspect host and cloud firewalls before the switch. Authorize inbound **TCP 18443**
+from the operator's trusted source IP/CIDR where practical (or `0.0.0.0/0` when
+access from arbitrary IPv4 networks is intentional). Leave SSH and other rules
+unchanged. A cloud security group must allow the port independently of the host.
+Verify from outside the VPS with the correct CA and IP hostname checks, no TLS
+verification bypass: unauthenticated 401, authenticated dashboard/readiness 200,
+research persistence and current providers. Check browser bundles/logs for secrets.
+
+### Windows certificate trust
+
+Export only `/data/caddy/pki/authorities/local/root.crt` from the Caddy container
+over verified SSH. Compare its SHA-256 fingerprint against an independently
+retrieved SSH fingerprint before trusting it. Never copy the CA private key.
+For Edge/Chrome on Windows, import that one certificate into the **Current User**
+Trusted Root Certification Authorities store:
+
+```powershell
+certutil -user -addstore Root .\terminal-root.crt
+```
+
+Restart the browser and open `https://<IPv4>:18443`. This trusts certificates issued
+by that CA for the current Windows user, not just this IP; protect the server CA
+key and do not import unrelated certificates. To undo trust, remove precisely its
+thumbprint with `certutil -user -delstore Root <thumbprint>`. A dedicated browser
+profile with its own CA store is preferable when supported. Never use a browser
+certificate-warning bypass as normal access.
+
+All four services retain `unless-stopped`. Confirm Docker is enabled at boot and
+that the backup timer remains active. After external access succeeds, a controlled
+Docker-service restart (not `compose down`) can verify automatic return without
+altering SSH or destroying data. Compare research records/volume identity before
+and after, then check heartbeat, readiness and live ingestion. Explicitly stopped
+containers do not automatically resume under `unless-stopped`; start them before
+the persistence test. Record a new public-IP soak baseline after this change.
