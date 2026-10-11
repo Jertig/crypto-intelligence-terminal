@@ -265,8 +265,11 @@ async function run() {
   check(
     'Private production keeps the authenticated TLS gateway',
     privateModel.services.caddy.environment.TLS_PROFILE === 'local_tls' &&
-      privateModel.services.caddy.environment.ACCESS_HASH ===
-        config.ACCESS_HASH &&
+      // Compose escapes dollar signs so its serialized output can be reused as input.
+      privateModel.services.caddy.environment.ACCESS_HASH.replaceAll(
+        '$$',
+        '$',
+      ) === config.ACCESS_HASH &&
       privateModel.services.web.environment.APP_ORIGIN === origin,
   );
   check(
